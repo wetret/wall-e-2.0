@@ -1,1 +1,0 @@
-# hack-zurich-2019
