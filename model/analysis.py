@@ -41,7 +41,7 @@ def getCoordinates(uniqueIds, mappings):
 
 
 def loadMapping():
-    originalData = pd.read_csv('2019-09-27-basel-collections.csv', delimiter=',')
+    originalData = pd.read_csv('../data/2019-09-27-basel-collections.csv', delimiter=',')
     # keepData = originalData[['geometry', 'coordinates']]
     # drop na osm_id
     cleanIndex = originalData['osm_id'].dropna().index
@@ -54,7 +54,7 @@ def loadMapping():
 
 
 def loadData():
-    originalData = pd.read_csv('2019-09-27-basel-measures.csv', delimiter=';')
+    originalData = pd.read_csv('../2019-09-27-basel-measures.csv', delimiter=';')
     rawData = originalData.iloc[:, 0:17]
     rawData.loc[:, 'uniqueId'] = rawData['osm_id'].apply(lambda x: str(x)) + "-" + rawData['cci_id'].apply(lambda x: str(x))
     rawData.loc[:, 'timestamp'] = rawData.loc[:, 'date'].apply(lambda x: pd.to_datetime(x))
@@ -180,7 +180,7 @@ if __name__ == '__main__':
     with open('transformed.p', 'rb') as file:
         transformedData = pickle.load(file)
     # trainAndEvaluateWithCV(transformedData['features'].values, transformedData['scores'].values)
-    
+
     train_features, test_features, train_labels, test_labels = splitDataSet(transformedData)
     output = trainAndEvaluateModel(train_features, test_features, train_labels, test_labels)
     print(output)
@@ -216,5 +216,4 @@ def skizzeRareOHOT():
     y_pred = r.predict_proba(X_test_rare)
     print(log_loss(y_test,y_pred))
     print(X_train_rare.shape)
-skl.model_selection.GridSearchCV()
 print("ok")
