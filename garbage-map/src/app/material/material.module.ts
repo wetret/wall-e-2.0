@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatGridListModule, MatToolbarModule, MatButtonModule,
   MatDatepickerModule, MatNativeDateModule, MatSelectModule,
-  MatInputModule} from '@angular/material';
+  MatInputModule, MatCardModule} from '@angular/material';
 import {DragDropModule} from '@angular/cdk/drag-drop';
 import {FullscreenOverlayContainer, OverlayContainer} from '@angular/cdk/overlay';
 
@@ -15,7 +15,8 @@ const importModules = [
   MatNativeDateModule,
   DragDropModule,
   MatInputModule,
-  MatSelectModule];
+  MatSelectModule,
+  MatCardModule];
 
 @NgModule({
   providers: [{provide: OverlayContainer, useClass: FullscreenOverlayContainer}],

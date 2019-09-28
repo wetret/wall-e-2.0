@@ -2198,6 +2198,14 @@ export class AppComponent implements OnInit {
     return this.dataService.getEvents();
   }
   setupMouse() {
+    const tooltipSpan = document.getElementById('tooltip-span');
+    window.onmousemove = (e) => {
+        const x = e.clientX;
+        const y = e.clientY;
+        tooltipSpan.style.top = (y + 20) + 'px';
+        tooltipSpan.style.left = (x + 20) + 'px';
+    };
+
     const domElement = document.getElementById('mouse-position');
     const mousePositionControl = new MousePosition({
       coordinateFormat: createStringXY(4),
@@ -2220,7 +2228,6 @@ export class AppComponent implements OnInit {
       for (const l of allLines) {
         const c = (l.getGeometry() as LineString).getFlatMidpoint();
         const d = (c[0] - coords[0]) * (c[0] - coords[0]) + (c[1] - coords[1]) * (c[1] - coords[1]);
-        console.log('c',c, 'coords', coords)
         if (d < shortestValue) {
           shortestValue = d;
           shortestElement = l;

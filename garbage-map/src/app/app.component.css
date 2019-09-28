@@ -23,3 +23,18 @@
   0 2px 2px 0 rgba(0, 0, 0, 0.14),
   0 1px 5px 0 rgba(0, 0, 0, 0.12);
 }
+
+.tooltip {
+  text-decoration:none;
+  position:relative;
+}
+.tooltip span {
+  display:none;
+}
+.tooltip:hover span {
+  display:block;
+  position:fixed;
+  overflow:hidden;
+  z-index: 50;
+  max-width: 400px;
+}
