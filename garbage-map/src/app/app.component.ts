@@ -1,6 +1,18 @@
-import {Component, OnInit} from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
-declare var ol: any;
+import 'ol/ol.css';
+import Map from 'ol/Map';
+import View from 'ol/View';
+import GeoJSON from 'ol/format/GeoJSON';
+import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
+import { OSM, Vector as VectorSource } from 'ol/source';
+import { Fill, Stroke, Style, Text } from 'ol/style';
+import Circle from 'ol/geom/Circle';
+
+import { fromLonLat } from 'ol/proj';
+import { Feature } from 'ol';
+import LineString from 'ol/geom/LineString';
+import Point from 'ol/geom/Point';
 
 @Component({
   selector: 'app-root',
@@ -10,24 +22,30 @@ declare var ol: any;
 export class AppComponent implements OnInit {
   title = 'garbage-map';
 
-  initialLatitude = 7.5868;
-  initialLongitude = 47.5585;
+  initialLatitude = 7.5715701;
+  initialLongitude = 47.5661319;
 
-  map: any;
-  vectorLines: any;
+  map: Map;
+  vectorLayer: VectorLayer;
+  vectorSource: VectorSource;
 
   ngOnInit() {
-    this.vectorLines = new ol.layer.Vector({
-      source: new ol.source.Vector({
-        url: 'https://openlayers.org/en/latest/examples/data/geojson/polygon-samples.geojson',
-        format: new ol.format.GeoJSON()
-      }),
+    this.vectorSource = new VectorSource();
+
+    this.vectorSource.addFeatures([
+      new Feature(
+        new LineString([[7.5705014, 47.5668264], [7.5715701, 47.5661319]])
+      )
+    ]);
+
+    this.vectorLayer = new VectorLayer({
+      source: this.vectorSource,
       style: lineStyleFunction
     });
 
     function lineStyleFunction(feature, resolution) {
-      return new ol.style.Style({
-        stroke: new ol.style.Stroke({
+      return new Style({
+        stroke: new Stroke({
           color: 'green',
           width: 2
         }),
@@ -35,19 +53,17 @@ export class AppComponent implements OnInit {
       });
     }
 
-    this.map = new ol.Map({
+    this.map = new Map({
       target: 'map',
       layers: [
-        new ol.layer.Tile({
-          source: new ol.source.OSM()
+        new TileLayer({
+          source: new OSM()
         }),
-        this.vectorLines
+        this.vectorLayer
       ],
-      view: new ol.View({
-        /*center: ol.proj.fromLonLat([this.initialLatitude, this.initialLongitude]),
-        zoom: 15*/
-        center: [-8161939, 6095025],
-        zoom: 8
+      view: new View({
+        center: fromLonLat([this.initialLatitude, this.initialLongitude]),
+        zoom: 16
       })
     });
   }
