@@ -34,7 +34,6 @@ export class DataService {
           } as Place;
         });
       }),
-      tap(res => console.log(res))
     );
   }
 

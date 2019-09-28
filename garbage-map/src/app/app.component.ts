@@ -26,6 +26,7 @@ export class AppComponent implements OnInit {
 
   private initialLatitude = 7.5715701;
   private initialLongitude = 47.5661319;
+  private places;
 
   minDate = new Date(2019, 3, 1);
   maxDate = new Date(2019, 8, 28);
@@ -61,12 +62,18 @@ export class AppComponent implements OnInit {
       })
     });
 
-    const places = this.getPlaces().subscribe();
-    console.log('subscribed', places);
-  }
-
-  updateMap($event) {
-    this.places$ = this.dataService.getDataByDay($event._value);
+    this.getPlaces().subscribe(places => {
+      this.places = places;
+      console.log(places)
+      const polygons = places.filter(place => place.coordinates.substr(0, 4) === 'LINE');
+      places.forEach(place => {
+        if (place.coordinates.substr(0, 4) === 'LINE') {
+          this.addLinesToVectorLayer([place.coordinates]);
+        } else {
+          this.addPolygonsToVectorLayer([place.coordinates]);
+        }
+      });
+    });
   }
 
   polygonFromString(input: string): Polygon {
