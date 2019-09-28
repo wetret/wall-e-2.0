@@ -330,13 +330,24 @@ export class AppComponent implements OnInit {
 
     features.forEach(f => {
       const cci = Math.random() * 5;
+
+      let r;
+      let g;
+      if (cci < 2.5) {
+        r = 255;
+        g = cci * 102;
+      } else {
+        r = 2.5 * (cci - 2.5) * 102;
+        g = 255;
+      }
+
       const style = new Style({
         stroke: new Stroke({
-          color: [(5 - cci) * 51, cci * 51, 0],
+          color: [r, g, 0],
           width: 3
         }),
         fill: new Fill({
-          color: [(5 - cci) * 51, cci * 51, 0, 0.1]
+          color: [r, g, 0, 0.2]
         })
       });
 
