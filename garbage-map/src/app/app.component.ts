@@ -7,10 +7,12 @@ import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import { OSM, Vector as VectorSource } from 'ol/source';
 import { Fill, Stroke, Style, Text } from 'ol/style';
 
-import { fromLonLat } from 'ol/proj';
+import { fromLonLat, transform } from 'ol/proj';
 import { Feature } from 'ol';
 
 import Polygon from 'ol/geom/Polygon';
+
+
 
 @Component({
   selector: 'app-root',
@@ -27,16 +29,20 @@ export class AppComponent implements OnInit {
   vectorLayer: VectorLayer;
   vectorSource: VectorSource;
 
+  transformCoords(coords: number[]) {
+    return transform(coords, 'urn:ogc:def:crs:OGC:1.3:CRS84', 'EPSG:3857');
+  }
+
   ngOnInit() {
     this.vectorSource = new VectorSource();
 
     this.vectorSource.addFeatures([
       new Feature(new Polygon(
         [[
-          [47.56665, 7.56963],
-          [47.56661, 7.57170],
-          [47.56481, 7.57129],
-          [47.56665, 7.56963]
+          this.transformCoords([7.569630, 47.56665]),
+          this.transformCoords([7.571700, 47.56661]),
+          this.transformCoords([7.571290, 47.56481]),
+          this.transformCoords([7.569630, 47.56665])
         ]]
       ))
     ]);
