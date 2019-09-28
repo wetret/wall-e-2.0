@@ -6,6 +6,7 @@ import View from 'ol/View';
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import { OSM, Vector as VectorSource } from 'ol/source';
 import { Fill, Stroke, Style, Text } from 'ol/style';
+import { DataService} from './data.service';
 
 import { fromLonLat, transform } from 'ol/proj';
 import { Feature } from 'ol';
@@ -20,22 +21,26 @@ import Polygon from 'ol/geom/Polygon';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  title = 'garbage-map';
 
-  initialLatitude = 7.5715701;
-  initialLongitude = 47.5661319;
+  private initialLatitude = 7.5715701;
+  private initialLongitude = 47.5661319;
 
-  map: Map;
-  vectorLayer: VectorLayer;
-  vectorSource: VectorSource;
+  private map: Map;
+  private vectorLayer: VectorLayer;
+  private vectorSource: VectorSource;
+  private places$;
+
+  constructor(private dataService: DataService) {}
 
   transformCoords(coords: number[]) {
-    return transform(coords, 'urn:ogc:def:crs:OGC:1.3:CRS84', 'EPSG:3857');
+    const newCoords =  transform(coords, 'urn:ogc:def:crs:OGC:1.3:CRS84', 'EPSG:3857');
+    console.log(newCoords);
+    return newCoords;
   }
 
   ngOnInit() {
+    this.places$ = this.dataService.getPlaces();
     this.vectorSource = new VectorSource();
-
     this.vectorSource.addFeatures([
       new Feature(new Polygon(
         [[

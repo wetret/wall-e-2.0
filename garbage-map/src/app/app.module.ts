@@ -7,6 +7,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CustomMaterialModule } from './material/material.module';
 import { MapViewComponent } from './map-view/map-view.component';
 import { HeaderComponent } from './header/header.component';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { HeaderComponent } from './header/header.component';
     BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    CustomMaterialModule
+    CustomMaterialModule,
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]
