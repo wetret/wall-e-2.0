@@ -15,11 +15,16 @@ def loadAll():
     global cleanedData
     cleanedData = analysis.cleanData(data)
 
-    global transformedData
-    transformedData = analysis.transformData(cleanedData)
+    # global transformedData
+    # transformedData = analysis.transformData(cleanedData)
 
     global mappings
     mappings = analysis.loadMapping()
+
+    global model
+    with open('../data/model.p', 'rb') as file:
+        model = pickle.load(file)
+
 
 
 @app.route("/")
@@ -30,8 +35,6 @@ def hello():
 @app.route('/averages', methods=['GET'])
 def averages():
     responseData = analysis.calculateAverages(cleanedData)
-
-    responseData.set_index("uniqueId", inplace=True)
     responseData.loc[:, "coordinates"] = analysis.getCoordinates(responseData.index, mappings)
     responseData.reset_index(inplace=True)
 
@@ -40,19 +43,37 @@ def averages():
 
 @app.route("/predict/<date>/<daySegment>", methods=['GET'])
 def predict(date, daySegment):
-    with open('../data/model.p', 'rb') as file:
-        model = pickle.load(file)
 
-    matchingData = cleanedData[cleanedData["date"] == pd.to_datetime(date).date()]
-    matchingData = matchingData.loc[matchingData["time"] == daySegment]
+    # create feature for sample to predict
+    timeStamp = pd.to_datetime(date)
+    realDate = pd.to_datetime(date).date()
+    weekDay = timeStamp.weekday()
+    time = daySegment
+    isHoliday = analysis.getHoliday(realDate)
+    weather = analysis.getWeatherForDate(date)
 
-    Xcategories = matchingData[['place_type', 'weekday', 'time', 'isHoliday', 'weatherCat']]
-    features = pd.get_dummies(Xcategories, columns=['place_type', 'weekday', 'time', 'weatherCat'])
+    allIds = cleanedData['uniqueId'].unique()
+    allIds.loc[:, 'place_type'] = cleanedData['place_type']
+    allIds.loc[:, 'weekday'] = weekDay
+    allIds.loc[:, 'time'] = time
+    allIds.loc[:, 'isHoliday'] = isHoliday
+    allIds.loc[:, 'weatherCat'] = weather
+
+    #
+    # matchingData = cleanedData[cleanedData["date"] == pd.to_datetime(date).date()]
+    # matchingData = matchingData.loc[matchingData["time"] == daySegment]
+
+    # Xcategories = matchingData[['place_type', 'weekday', 'time', 'isHoliday', 'weatherCat']]
+    features = pd.get_dummies(allIds, columns=['place_type', 'weekday', 'time', 'weatherCat'])
 
     predictions = model.predict(features)
-    matchingData["cci"] = predictions
+    allIds.loc[:, "cci"] = predictions
 
-    return Response(matchingData.to_json(orient='records'), mimetype="application/json")
+    allIds.set_index('uniqueId', inplace=True)
+    allIds.loc[:, "coordinates"] = analysis.getCoordinates(allIds.index, mappings)
+    allIds.reset_index(inplace=True)
+
+    return Response(allIds.to_json(orient='records'), mimetype="application/json")
 
 
 @app.route("/events/<date>", methods=['GET'])
