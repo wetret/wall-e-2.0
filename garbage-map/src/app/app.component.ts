@@ -2223,6 +2223,7 @@ export class AppComponent implements OnInit {
       if (isNaN(coords[0])) {
         return;
       }
+      let highestAnimationValue = 0;
       let shortestValue = 1500;
       let shortestElement: Feature;
       for (const l of allLines) {
@@ -2233,8 +2234,12 @@ export class AppComponent implements OnInit {
           shortestElement = l;
         }
 
+
         if (l["active"] > 0) {
           l["active"] -= ANIMATION_STEP;
+          if (l["active"] > highestAnimationValue) {
+            highestAnimationValue = l["active"];
+          }
           const style = new Style({
             stroke: new Stroke({
               color: [0, 0, 255 * l["active"] / ANIMATION_MAX],
@@ -2243,6 +2248,11 @@ export class AppComponent implements OnInit {
           });
           l.setStyle(style);
         }
+      }
+      if (highestAnimationValue > (ANIMATION_MAX * 0.85)) {
+        document.getElementById("tooltip-span").style.display = 'block';
+      } else {
+        document.getElementById("tooltip-span").style.display = 'none';
       }
       if (!shortestElement) {
         return;
