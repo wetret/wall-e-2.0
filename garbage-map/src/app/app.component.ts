@@ -7,13 +7,15 @@ import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import { OSM, Vector as VectorSource } from 'ol/source';
 import { Fill, Stroke, Style, Text } from 'ol/style';
 import { DataService} from './data.service';
-
+import MousePosition from 'ol/control/MousePosition';
 import { fromLonLat, transform } from 'ol/proj';
 import { Feature } from 'ol';
+import {defaults as defaultControls} from 'ol/control';
 
 import Polygon from 'ol/geom/Polygon';
 import LineString from 'ol/geom/LineString';
 import Point from 'ol/geom/Point';
+import { createStringXY } from 'ol/coordinate';
 
 @Component({
   selector: 'app-root',
@@ -31,7 +33,9 @@ export class AppComponent implements OnInit {
   private map: Map;
   private vectorLayer: VectorLayer;
   private vectorSource: VectorSource;
-  private places$;
+
+  private allPolygons: Feature[] = [];
+  private allLines: Feature[] = [];
 
   // TODO subscribe to Observables
   constructor(private dataService: DataService) {}
@@ -57,6 +61,7 @@ export class AppComponent implements OnInit {
     });
 
     this.addSampleData();
+    this.setupMouse();
   }
 
   updateMap($event) {
@@ -113,7 +118,7 @@ export class AppComponent implements OnInit {
 
       f.setStyle(style);
     });
-
+    this.allLines.push(...features);
     this.vectorSource.addFeatures(features);
   }
 
@@ -143,7 +148,7 @@ export class AppComponent implements OnInit {
 
       f.setStyle(style);
     });
-
+    this.allPolygons.push(...features);
     this.vectorSource.addFeatures(features);
   }
 
@@ -2191,6 +2196,64 @@ export class AppComponent implements OnInit {
 
   getEvents() {
     return this.dataService.getEvents();
+  }
+  setupMouse() {
+    const domElement = document.getElementById('mouse-position');
+    const mousePositionControl = new MousePosition({
+      coordinateFormat: createStringXY(4),
+      projection: 'EPSG:3857',
+      // comment the following two lines to have the mouse position
+      // be placed within the map.
+      className: 'mouse-position',
+      target: domElement,
+      undefinedHTML: '&nbsp;'
+    });
+    const ANIMATION_MAX = 3000;
+    const ANIMATION_STEP = 350;
+    setInterval(function(allLines) {
+      const coords = domElement.firstElementChild.innerHTML.split(', ').map(s => parseFloat(s));
+      if (isNaN(coords[0])) {
+        return;
+      }
+      let shortestValue = 1500;
+      let shortestElement: Feature;
+      for (const l of allLines) {
+        const c = (l.getGeometry() as LineString).getFlatMidpoint();
+        const d = (c[0] - coords[0]) * (c[0] - coords[0]) + (c[1] - coords[1]) * (c[1] - coords[1]);
+        console.log('c',c, 'coords', coords)
+        if (d < shortestValue) {
+          shortestValue = d;
+          shortestElement = l;
+        }
+
+        if (l["active"] > 0) {
+          l["active"] -= ANIMATION_STEP;
+          const style = new Style({
+            stroke: new Stroke({
+              color: [0, 0, 255 * l["active"] / ANIMATION_MAX],
+              width: 20 * (l["active"] / ANIMATION_MAX) + 5
+            })
+          });
+          l.setStyle(style);
+        }
+      }
+      if (!shortestElement) {
+        return;
+      }
+
+      const style = new Style({
+        stroke: new Stroke({
+          color: [0, 0, 255],
+          width: 25
+        }),
+        fill: new Fill({
+          color: [0, 0, 255]
+        })
+      });
+      shortestElement.setStyle(style);
+      shortestElement["active"] = ANIMATION_MAX;
+    }.bind(undefined, this.allLines), 50);
+    return mousePositionControl;
   }
 
   getPlaces() {
