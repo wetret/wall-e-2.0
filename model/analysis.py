@@ -9,6 +9,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import seaborn as sns
 import copy
 import pickle
+import json
 
 sns.set()
 
@@ -53,17 +54,35 @@ def loadMapping():
     return keepData
 
 
+def addWeatherData(rawData):
+    # load weather
+    weather = pd.read_csv('../data/weather_symbol.csv', delimiter=';')
+    weather.loc[:, 'date'] = weather.iloc[:, 0].apply(lambda x: str(pd.to_datetime(x).date().strftime('%Y-%m-%d')))
+    weather.loc[:, 'weatherClass'] = weather.iloc[:, 1]
+    weather.loc[:, 'weatherCat'] = weather.iloc[:, 1].apply(lambda x: deriveWeatherCat(x))
+    weather.drop(columns=['validdate', 'weather_symbol_1h:idx'], inplace=True)
+    weather.set_index('date', inplace=True)
+
+    # map weather to obs
+    rawData.loc[:, 'weatherCat'] = "nix"
+    dateStringSeries = rawData['date'].apply(lambda x: x.strftime('%Y-%m-%d'))
+    for k, v in weather['weatherCat'].iteritems():
+        rawData.loc[dateStringSeries == k, 'weatherCat'] = v
+    return rawData
+
+
 def loadData():
-    originalData = pd.read_csv('../2019-09-27-basel-measures.csv', delimiter=';')
+    originalData = pd.read_csv('../data/2019-09-27-basel-measures.csv', delimiter=';')
     rawData = originalData.iloc[:, 0:17]
     rawData.loc[:, 'uniqueId'] = rawData['osm_id'].apply(lambda x: str(x)) + "-" + rawData['cci_id'].apply(lambda x: str(x))
     rawData.loc[:, 'timestamp'] = rawData.loc[:, 'date'].apply(lambda x: pd.to_datetime(x))
     rawData.loc[:, 'date'] = rawData.loc[:, 'timestamp'].apply(lambda x: x.date())
     rawData.loc[:, 'weekday'] = rawData.loc[:, 'timestamp'].apply(lambda x: x.weekday())
     # hour seems to be plateauish
-    rawData.loc[:, 'hour'] = rawData.loc[:, 'timestamp'].apply(lambda x: x.hour)
+    # rawData.loc[:, 'hour'] = rawData.loc[:, 'timestamp'].apply(lambda x: x.hour)
     rawData.loc[:, 'time'] = rawData.loc[:, 'timestamp'].apply(lambda x: getTimeCat(x))
     rawData.loc[:, 'isHoliday'] = rawData.loc[:, 'date'].apply(lambda x: getHoliday(x))
+    rawData = addWeatherData(rawData)
 
     return rawData
 
@@ -111,8 +130,8 @@ def cleanData(rawData):
 
 def transformData(data):
     # collection = 1-places
-    Xcategories = data[['place_type', 'weekday', 'time', 'isHoliday']]
-    features = pd.get_dummies(Xcategories, columns=['place_type', 'weekday', 'time'])
+    Xcategories = data[['place_type', 'weekday', 'time', 'isHoliday', 'weatherCat']]
+    features = pd.get_dummies(Xcategories, columns=['place_type', 'weekday', 'time', 'weatherCat'])
     featureNames = list(features.columns)
     scores = data[['cci']]
     return {'features': features, 'featureNames': featureNames, 'scores': scores}
@@ -169,8 +188,42 @@ def trainAndEvaluateWithCV(X, Y):
         print(r2_score(y_test, y_pred))
 
 
+def deriveWeatherCat(category):
+    wClass = 'rain'
+    if category in (1, 2):
+        wClass = 'sun'
+    elif category in (3, 4):
+        wClass = 'cloudy'
+    elif category == 14:
+        wClass = 'thunderstorm'
+    return wClass
+
+
+def getEvents(date='2019-09-27'):
+    with open('../data/events.json', 'rb') as f:
+        eventData = json.load(f)
+
+    baselEvents = [e for e in eventData if 'basel' in e['address_city'].lower()]
+    eventsNow = [e for e in baselEvents if pd.to_datetime(e['date']) == pd.to_datetime('2019-09-27')]
+    importantEvents = []
+    np.random.seed(12345)
+    for e in eventsNow:
+        if (e['address_longitude'] is None) or (e['address_latitude'] is None):
+            continue
+
+        eventDesc = {'date': date, 'start_time': e['start_time'], 'end_time': e['end_time'],
+                     'title': e['title_de'],
+                     'desc': e['short_description_de'], 'venue': e['address_venue_name'],
+                     'coords': [e['address_longitude'], e['address_latitude']],
+                     'attendands': np.random.randint(100, 1500)}
+        importantEvents.append(eventDesc)
+    return importantEvents
+
+
 if __name__ == '__main__':
     s = loadMapping()
+    d = getEvents()
+
     # rawData = loadData()
     # dataWithoutRate = cleanData(rawData)
     # transformedData = transformData(dataWithoutRate)
