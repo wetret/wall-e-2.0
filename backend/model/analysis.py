@@ -73,6 +73,15 @@ def addWeatherData(rawData):
     return rawData
 
 
+def getWeatherForDate(date):
+    weather = pd.read_csv('../data/weather_symbol.csv', delimiter=';')
+    weather.loc[:, 'date'] = weather.iloc[:, 0].apply(lambda x: str(pd.to_datetime(x).date().strftime('%Y-%m-%d')))
+    weather.loc[:, 'weatherClass'] = weather.iloc[:, 1]
+    weather.loc[:, 'weatherCat'] = weather.iloc[:, 1].apply(lambda x: deriveWeatherCat(x))
+    weather.drop(columns=['validdate', 'weather_symbol_1h:idx'], inplace=True)
+    weather.set_index('date', inplace=True)
+    return weather.loc[date, 'weatherCat']
+
 def loadData():
     originalData = pd.read_csv('../data/2019-09-27-basel-measures.csv', delimiter=';')
     rawData = originalData.iloc[:, 0:17]
