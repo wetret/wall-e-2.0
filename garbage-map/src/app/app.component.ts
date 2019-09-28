@@ -48,6 +48,7 @@ export class AppComponent implements OnInit {
 
     this.map = new Map({
       target: 'map',
+      controls: defaultControls().extend([this.setupMouse()]),
       layers: [
         new TileLayer({
           source: new OSM({url: 'https://{a-c}.tile.openstreetmap.de/{z}/{x}/{y}.png'})
@@ -61,7 +62,6 @@ export class AppComponent implements OnInit {
     });
 
     this.addSampleData();
-    this.setupMouse();
   }
 
   updateMap($event) {
@@ -2219,6 +2219,7 @@ export class AppComponent implements OnInit {
     const ANIMATION_MAX = 3000;
     const ANIMATION_STEP = 350;
     setInterval(function(allLines, allPolygons) {
+      const domElement = document.getElementById('mouse-position');
       const coords = domElement.firstElementChild.innerHTML.split(', ').map(s => parseFloat(s));
       if (isNaN(coords[0])) {
         return;
