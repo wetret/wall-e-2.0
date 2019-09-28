@@ -96,7 +96,7 @@ tmp/
 
 ### Intellij ###
 # User-specific stuff
-.idea/**
+**/.idea/**
 
 # CMake
 cmake-build-*/
@@ -199,7 +199,7 @@ buildNumber.properties
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
-__pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 
