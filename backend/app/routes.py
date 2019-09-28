@@ -5,7 +5,7 @@ import pickle
 import pandas as pd
 import numpy as np
 
-from backend.model import analysis
+from model import analysis
 
 
 @app.before_first_request
