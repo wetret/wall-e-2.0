@@ -4,19 +4,26 @@ import json
 import pickle
 import pandas as pd
 import numpy as np
-from model import analysis
+
+from backend.model import analysis
 
 
 @app.before_first_request
 def loadAll():
     global data
-    data = analysis.loadData()
+    # data = analysis.loadData()
+    with open('../data/raw.p', 'rb') as file:
+        data = pickle.load(file)
 
     global cleanedData
-    cleanedData = analysis.cleanData(data)
+    # cleanedData = analysis.cleanData(data)
+    with open('../data/cleaned.p', 'rb') as file:
+        cleanedData = pickle.load(file)
 
-    # global transformedData
+    global transformedData
     # transformedData = analysis.transformData(cleanedData)
+    with open('../data/transformed.p', 'rb') as file:
+        transformedData = pickle.load(file)
 
     global mappings
     mappings = analysis.loadMapping()
@@ -24,7 +31,6 @@ def loadAll():
     global model
     with open('../data/model.p', 'rb') as file:
         model = pickle.load(file)
-
 
 
 @app.route("/")
@@ -52,21 +58,22 @@ def predict(date, daySegment):
     isHoliday = analysis.getHoliday(realDate)
     weather = analysis.getWeatherForDate(date)
 
-    allIds = cleanedData['uniqueId'].unique()
-    allIds.loc[:, 'place_type'] = cleanedData['place_type']
+    allIds = cleanedData[['uniqueId', 'place_type']].drop_duplicates(['uniqueId'])
     allIds.loc[:, 'weekday'] = weekDay
     allIds.loc[:, 'time'] = time
     allIds.loc[:, 'isHoliday'] = isHoliday
     allIds.loc[:, 'weatherCat'] = weather
 
-    #
-    # matchingData = cleanedData[cleanedData["date"] == pd.to_datetime(date).date()]
-    # matchingData = matchingData.loc[matchingData["time"] == daySegment]
+    featureData = allIds[['place_type', 'weekday', 'time', 'isHoliday', 'weatherCat']]
+    features = pd.get_dummies(featureData, columns=['place_type', 'weekday', 'time', 'weatherCat'])
 
-    # Xcategories = matchingData[['place_type', 'weekday', 'time', 'isHoliday', 'weatherCat']]
-    features = pd.get_dummies(allIds, columns=['place_type', 'weekday', 'time', 'weatherCat'])
+    transformedColumns = transformedData['featureNames']
+    transData = pd.DataFrame(0, columns=transformedColumns, index=features.index)
 
-    predictions = model.predict(features)
+    for col in features.columns:
+        transData.loc[:, col] = features.loc[:, col]
+
+    predictions = model.predict(np.array(transData))
     allIds.loc[:, "cci"] = predictions
 
     allIds.set_index('uniqueId', inplace=True)

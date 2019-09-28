@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-
-plt.switch_backend('MacOSX')
+# import matplotlib.pyplot as plt
+#
+# plt.switch_backend('MacOSX')
 import sklearn as skl
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.ensemble import RandomForestRegressor
@@ -72,6 +72,15 @@ def addWeatherData(rawData):
         rawData.loc[dateStringSeries == k, 'weatherCat'] = v
     return rawData
 
+
+def getWeatherForDate(date):
+    weather = pd.read_csv('../data/weather_symbol.csv', delimiter=';')
+    weather.loc[:, 'date'] = weather.iloc[:, 0].apply(lambda x: str(pd.to_datetime(x).date().strftime('%Y-%m-%d')))
+    weather.loc[:, 'weatherClass'] = weather.iloc[:, 1]
+    weather.loc[:, 'weatherCat'] = weather.iloc[:, 1].apply(lambda x: deriveWeatherCat(x))
+    weather.drop(columns=['validdate', 'weather_symbol_1h:idx'], inplace=True)
+    weather.set_index('date', inplace=True)
+    return weather.loc[date, 'weatherCat']
 
 def loadData():
     originalData = pd.read_csv('../data/2019-09-27-basel-measures.csv', delimiter=';')
@@ -212,8 +221,8 @@ def calculateAverages(data):
 
 
 def getEvents(date='2019-09-27'):
-    with open('../data/events.json', 'rb') as f:
-        eventData = json.load(f)
+    with open('../data/events.p', 'rb') as file:
+        eventData = pickle.load(file)
 
     baselEvents = [e for e in eventData if 'basel' in e['address_city'].lower()]
     eventsNow = [e for e in baselEvents if pd.to_datetime(e['date']) == pd.to_datetime('2019-09-27')]
@@ -236,14 +245,20 @@ if __name__ == '__main__':
     s = loadMapping()
     d = getEvents()
 
-    # rawData = loadData()
-    # dataWithoutRate = cleanData(rawData)
-    # transformedData = transformData(dataWithoutRate)
-    # with open('transformed.p', 'wb') as file:
-    #     pickle.dump(transformedData, file)
+    rawData = loadData()
+    with open('../data/raw.p', 'wb') as file:
+        pickle.dump(rawData, file)
 
-    with open('../data/transformed.p', 'rb') as file:
-        transformedData = pickle.load(file)
+    dataWithoutRate = cleanData(rawData)
+    with open('../data/cleaned.p', 'wb') as file:
+        pickle.dump(dataWithoutRate, file)
+
+    transformedData = transformData(dataWithoutRate)
+    with open('../data/transformed.p', 'wb') as file:
+        pickle.dump(transformedData, file)
+
+    # with open('../data/transformed.p', 'rb') as file:
+    #     transformedData = pickle.load(file)
     # trainAndEvaluateWithCV(transformedData['features'].values, transformedData['scores'].values)
 
     train_features, test_features, train_labels, test_labels = splitDataSet(transformedData)
