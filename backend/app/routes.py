@@ -1,6 +1,12 @@
 from app import app
 from datahandler import data_handler
 from flask import Response
+import pickle
+
+
+@app.route("/")
+def hello():
+    return "Hello World!"
 
 
 @app.before_first_request
@@ -12,15 +18,21 @@ def loadAllCsv():
     mappings = data_handler.loadMappings()
 
 
-@app.route('/averages')
+@app.route('/averages', methods=['GET'])
 def averages():
-    cleanedData = data_handler.removeOccurancesLessThenFromMeasures(10, data)
+    cleanedData = data_handler.cleanData(data)
     responseData = data_handler.calculateAverageFromMeasures(cleanedData)
 
-    responseData.set_index("key", inplace=True)
+    responseData.set_index("uniqueId", inplace=True)
     responseData.loc[:, "coordinates"] = data_handler.getCoordinates(responseData.index, mappings)
     responseData.reset_index(inplace=True)
 
     return Response(responseData.to_json(orient='records'), mimetype="application/json")
+
+
+@app.route("/predict/<date>", methods=['GET'])
+def predicte(date):
+    with open('../data/transformed.p', 'rb') as file:
+        model = pickle.load(file)
 
 
