@@ -1,0 +1,12 @@
+# Temperatur heute
+http://api.meteomatics.com/now/t_2m:C/47.559601,7.588576/csv
+
+# Temperatur range
+http://api.meteomatics.com/2019-04-17T14:00:00ZP151D:P1D/t_2m:C/47.559601,7.588576/csv
+
+# Temperatur Wahrnehmung
+http://api.meteomatics.com/2019-04-17T14:00:00ZP151D:P1D/t_apparent:C/47.559601,7.588576/csv
+
+# Wetter symbol
+http://api.meteomatics.com/2019-04-17T14:00:00ZP151D:P1D/weather_symbol_1h:idx/47.559601,7.588576/csv
+
