@@ -1,0 +1,23 @@
+<mat-grid-list cols="3" rowHeight="100px" rowWidth="100%" class="grid">
+  <mat-grid-tile class="tile" colspan="2" rowspan="5" style="background: lightblue">
+    <img src="../../assets/map.png" width="500px" height="500px">
+  </mat-grid-tile>
+  <mat-grid-tile class="tile" colspan="1" rowspan="2" style="background: lightgreen">
+
+    <!--Date Picker-->
+    <input matInput [matDatepicker]="picker" placeholder="Garbage Day (dd/mm/yyyy)">
+    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-datepicker #picker></mat-datepicker>
+
+    <!--Filter-->
+    <mat-label>Cars</mat-label>
+    <select matNativeControl>
+      <option value="default">No filter</option>
+      <option value="saab">Saab</option>
+      <option value="mercedes">Mercedes</option>
+      <option value="audi">Audi</option>
+    </select>
+
+
+  </mat-grid-tile>
+</mat-grid-list>
