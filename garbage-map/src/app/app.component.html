@@ -1,2 +1,8 @@
 <app-header></app-header>
-<div id="map" class="map"></div>
+<div id="map" class="map">
+  <mat-form-field class="date-box" id="overlay" cdkDrag>
+    <input matInput [min]="minDate" [max]="maxDate" [matDatepicker]="picker" placeholder="Choose a date">
+    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-datepicker #picker></mat-datepicker>
+  </mat-form-field>
+</div>
