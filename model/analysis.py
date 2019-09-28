@@ -222,7 +222,6 @@ def getEvents(date='2019-09-27'):
 
 if __name__ == '__main__':
     s = loadMapping()
-    d = getEvents()
 
     # rawData = loadData()
     # dataWithoutRate = cleanData(rawData)
@@ -238,7 +237,6 @@ if __name__ == '__main__':
     output = trainAndEvaluateModel(train_features, test_features, train_labels, test_labels)
     print(output)
 
-print("ok")
 
 def skizzeRareOHOT():
     X_train_rare = copy.copy(X_train)
@@ -269,4 +267,3 @@ def skizzeRareOHOT():
     y_pred = r.predict_proba(X_test_rare)
     print(log_loss(y_test,y_pred))
     print(X_train_rare.shape)
-print("ok")

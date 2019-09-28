@@ -1,7 +1,10 @@
 from app import app
 from datahandler import data_handler
 from flask import Response
+import json
 import pickle
+
+from model.analysis import getEvents
 
 
 @app.route("/")
@@ -36,3 +39,7 @@ def predicte(date):
         model = pickle.load(file)
 
 
+@app.route("/events/<date>", methods=['GET'])
+def event(date):
+    eventsInBasel = getEvents(date=date)
+    return Response(json.dumps(eventsInBasel), mimetype="application/json")
