@@ -25,6 +25,9 @@ export class AppComponent implements OnInit {
   private initialLatitude = 7.5715701;
   private initialLongitude = 47.5661319;
 
+  minDate = new Date(2020, 3, 1);
+  maxDate = new Date(2020, 8, 28);
+
   private map: Map;
   private vectorLayer: VectorLayer;
   private vectorSource: VectorSource;
