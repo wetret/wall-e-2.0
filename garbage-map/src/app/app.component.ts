@@ -2218,22 +2218,21 @@ export class AppComponent implements OnInit {
     });
     const ANIMATION_MAX = 3000;
     const ANIMATION_STEP = 350;
-    setInterval(function(allLines) {
+    setInterval(function(allLines, allPolygons) {
       const coords = domElement.firstElementChild.innerHTML.split(', ').map(s => parseFloat(s));
       if (isNaN(coords[0])) {
         return;
       }
       let highestAnimationValue = 0;
-      let shortestValue = 1500;
+      let shortestValue = 2000;
       let shortestElement: Feature;
       for (const l of allLines) {
-        const c = (l.getGeometry() as LineString).getFlatMidpoint();
+        const c = (l.getGeometry() as LineString).getClosestPoint(coords);
         const d = (c[0] - coords[0]) * (c[0] - coords[0]) + (c[1] - coords[1]) * (c[1] - coords[1]);
         if (d < shortestValue) {
           shortestValue = d;
           shortestElement = l;
         }
-
 
         if (l["active"] > 0) {
           l["active"] -= ANIMATION_STEP;
@@ -2249,6 +2248,34 @@ export class AppComponent implements OnInit {
           l.setStyle(style);
         }
       }
+      for (const l of allPolygons) {
+        const c = (l.getGeometry() as Polygon).getClosestPoint(coords);
+        const d = (c[0] - coords[0]) * (c[0] - coords[0]) + (c[1] - coords[1]) * (c[1] - coords[1]);
+        if (d < shortestValue + 1000) {
+          shortestValue = d + 1000;
+          shortestElement = l;
+        }
+
+        if (l["active"] > 0) {
+          l["active"] -= ANIMATION_STEP;
+          if (l["active"] > highestAnimationValue) {
+            highestAnimationValue = l["active"];
+          }
+          const T = l["active"] / ANIMATION_MAX;
+          const style = new Style({
+            stroke: new Stroke({
+              color: [0, 128 * T, 255 * T],
+              width: 15 * T + 5
+            }),
+            fill: new Fill({
+              color: [0, 128 * T, 255 * T, 0.5 * T]
+            })
+          });
+          l.setStyle(style);
+        }
+      }
+
+      // disable or enable mouseover
       if (highestAnimationValue > (ANIMATION_MAX * 0.85)) {
         document.getElementById("tooltip-span").style.display = 'block';
       } else {
@@ -2261,15 +2288,15 @@ export class AppComponent implements OnInit {
       const style = new Style({
         stroke: new Stroke({
           color: [0, 0, 255],
-          width: 25
+          width: 15
         }),
         fill: new Fill({
-          color: [0, 0, 255]
+          color: [0, 0, 255, 0.5]
         })
       });
       shortestElement.setStyle(style);
       shortestElement["active"] = ANIMATION_MAX;
-    }.bind(undefined, this.allLines), 50);
+    }.bind(undefined, this.allLines, this.allPolygons), 50);
     return mousePositionControl;
   }
 
