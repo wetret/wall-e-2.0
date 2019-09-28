@@ -326,3 +326,4 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+data/model.p

@@ -41,6 +41,7 @@ def hello():
 @app.route('/averages', methods=['GET'])
 def averages():
     responseData = analysis.calculateAverages(cleanedData)
+    responseData.set_index('uniqueId', inplace=True)
     responseData.loc[:, "coordinates"] = analysis.getCoordinates(responseData.index, mappings)
     responseData.reset_index(inplace=True)
 
@@ -78,6 +79,11 @@ def predict(date, daySegment):
 
     allIds.set_index('uniqueId', inplace=True)
     allIds.loc[:, "coordinates"] = analysis.getCoordinates(allIds.index, mappings)
+
+    # add name
+    nameData = cleanedData[["uniqueId", "place_name"]].drop_duplicates(['uniqueId']).set_index('uniqueId')
+    allIds.loc[:, "place_name"] = nameData
+
     allIds.reset_index(inplace=True)
 
     return Response(allIds.to_json(orient='records'), mimetype="application/json")
