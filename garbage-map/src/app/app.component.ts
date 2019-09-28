@@ -61,7 +61,8 @@ export class AppComponent implements OnInit {
       })
     });
 
-    this.addSampleData();
+    const places = this.getPlaces().subscribe();
+    console.log('subscribed', places);
   }
 
   updateMap($event) {
