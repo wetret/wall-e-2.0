@@ -23,3 +23,4 @@ def averages():
 
     return Response(responseData.to_json(orient='records'), mimetype="application/json")
 
+
