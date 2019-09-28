@@ -53,6 +53,14 @@ def loadMapping():
 
     keepData.set_index('uniqueId', inplace=True)
     keepData.drop(columns=['osm_id', 'cci_id'], inplace=True)
+
+    # calculate long lat of midpoint
+    keepData.loc[:, 'midpoints'] = keepData['coordinates'].apply(lambda x: getMidPoint(x))
+    keepData.loc[:, 'long'] = keepData.loc[:, 'midpoints'].apply(lambda x: x[0])
+    # keepData.loc[:, 'long'] = skl.preprocessing.scale(keepData['long'])
+    keepData.loc[:, 'lat'] = keepData.loc[:, 'midpoints'].apply(lambda x: x[1])
+    # keepData.loc[:, 'lat'] = skl.preprocessing.scale(keepData['lat'])
+    keepData.drop(columns=['midpoints'], inplace=True)
     return keepData
 
 
@@ -82,6 +90,24 @@ def getWeatherForDate(date):
     weather.set_index('date', inplace=True)
     return weather.loc[date, 'weatherCat']
 
+
+def addCoordinates(rawData):
+    mappings = loadMapping()
+    rawData.set_index('uniqueId', inplace=True)
+    rawData.loc[:, 'long'] = mappings['long']
+    rawData.loc[:, 'lat'] = mappings['lat']
+
+    # rawData.loc[:, 'coordinates'] = mappings['coordinates'].apply(lambda x: getMidPoint(x))
+    # rawData.loc[:, 'long'] = rawData.loc[:, 'coordinates'].apply(lambda x: x[0])
+    # rawData.loc[:, 'long'] = skl.preprocessing.scale(rawData['long'])
+    # rawData.loc[:, 'lat'] = rawData.loc[:, 'coordinates'].apply(lambda x: x[1])
+    # rawData.loc[:, 'lat'] = skl.preprocessing.scale(rawData['lat'])
+
+    # rawData.drop(columns=['coordinates'], inplace=True)
+    rawData.reset_index(inplace=True)
+    return rawData
+
+
 def loadData():
     originalData = pd.read_csv('../data/2019-09-27-basel-measures.csv', delimiter=';')
     rawData = originalData.iloc[:, 0:17]
@@ -94,7 +120,12 @@ def loadData():
     # rawData.loc[:, 'hour'] = rawData.loc[:, 'timestamp'].apply(lambda x: x.hour)
     rawData.loc[:, 'time'] = rawData.loc[:, 'timestamp'].apply(lambda x: getTimeCat(x))
     rawData.loc[:, 'isHoliday'] = rawData.loc[:, 'date'].apply(lambda x: getHoliday(x))
+
+    # add weather
     rawData = addWeatherData(rawData)
+
+    # add coordinates
+    # rawData = addCoordinates(rawData)
 
     return rawData
 
@@ -142,7 +173,9 @@ def cleanData(rawData):
 
 def transformData(data):
     # collection = 1-places
+    # Xcategories = data[['place_type', 'weekday', 'time', 'isHoliday', 'weatherCat', 'long', 'lat']]
     Xcategories = data[['place_type', 'weekday', 'time', 'isHoliday', 'weatherCat']]
+
     features = pd.get_dummies(Xcategories, columns=['place_type', 'weekday', 'time', 'weatherCat'])
     featureNames = list(features.columns)
     scores = data[['cci']]
@@ -160,7 +193,7 @@ def splitDataSet(transformedData, testSize=0.10):
 
 def trainAndEvaluateModel(train_features, test_features, train_labels, test_labels):
     # Instantiate model with 1000 decision trees
-    rf = RandomForestRegressor(n_estimators=1000, random_state=42)
+    rf = RandomForestRegressor(n_estimators=1000, random_state=42, verbose=1, n_jobs=8)
     # Train the model on training data
     rf.fit(train_features, train_labels)
 
@@ -171,9 +204,6 @@ def trainAndEvaluateModel(train_features, test_features, train_labels, test_labe
     absoluteError = mean_absolute_error(test_labels.flatten(), predictions)
     squaredError = mean_squared_error(test_labels.flatten(), predictions)
 
-    # # feature importance
-    # plt.plot(range(41), rf.feature_importances_)
-    # plt.xticks(range(41), labels=featureNames, rotation='vertical')
     return {'mae': absoluteError, 'mse': squaredError, 'model': rf}
 
 
@@ -212,12 +242,13 @@ def deriveWeatherCat(category):
 
 
 def calculateAverages(data):
+    nameData = data[["uniqueId", "place_name"]].drop_duplicates(['uniqueId']).set_index('uniqueId')
     averagesPerKey = data[
         ["uniqueId", "cci", "rateCigarrettes", "ratePapers", "rateBottles", "rateExcrements", "rateSyringues",
          "rateGums",
-         "rateLeaves", "rateGrits", "rateGlassDebris"]].groupby("uniqueId").mean().reset_index()
-
-    return averagesPerKey
+         "rateLeaves", "rateGrits", "rateGlassDebris"]].groupby("uniqueId").mean()
+    averagesPerKey.loc[:, 'place_name'] = nameData
+    return averagesPerKey.reset_index()
 
 
 def getEvents(date='2019-09-27'):
@@ -241,10 +272,19 @@ def getEvents(date='2019-09-27'):
     return importantEvents
 
 
-if __name__ == '__main__':
-    s = loadMapping()
-    d = getEvents()
+def getMidPoint(cell):
+    if isinstance(cell, str) and cell[0] == 'P':
+        objectType = 'POLYGON'
+    else:
+        objectType = 'LINESTRING'
 
+    polystr = cell.split(objectType)[1].strip('(').strip(')').split(", ")
+    polygons = [poly.split(" ") for poly in polystr]
+    return np.array(polygons).astype(np.float).mean(axis=0)
+
+
+if __name__ == '__main__':
+    #
     rawData = loadData()
     with open('../data/raw.p', 'wb') as file:
         pickle.dump(rawData, file)
@@ -257,18 +297,20 @@ if __name__ == '__main__':
     with open('../data/transformed.p', 'wb') as file:
         pickle.dump(transformedData, file)
 
-    # with open('../data/transformed.p', 'rb') as file:
-    #     transformedData = pickle.load(file)
+    with open('../data/transformed.p', 'rb') as file:
+        transformedData = pickle.load(file)
     # trainAndEvaluateWithCV(transformedData['features'].values, transformedData['scores'].values)
 
     train_features, test_features, train_labels, test_labels = splitDataSet(transformedData)
     output = trainAndEvaluateModel(train_features, test_features, train_labels, test_labels)
     print(output)
 
+    # # feature importance
+    # plt.plot(range(len(output['model'].feature_importances_)), output['model'].feature_importances_)
+    # plt.xticks(range(len(output['model'].feature_importances_)), labels=transformedData['featureNames'], rotation='vertical')
+
     with open('../data/model.p', 'wb') as file:
         pickle.dump(output["model"], file)
-
-print("ok")
 
 
 def skizzeRareOHOT():
@@ -300,6 +342,3 @@ def skizzeRareOHOT():
     y_pred = r.predict_proba(X_test_rare)
     print(log_loss(y_test, y_pred))
     print(X_train_rare.shape)
-
-
-print("ok")
