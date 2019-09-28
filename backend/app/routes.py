@@ -40,7 +40,7 @@ def hello():
 
 @app.route('/averages', methods=['GET'])
 def averages():
-    responseData = analysis.calculateAverages(cleanedData)
+    responseData = analysis.calculateAverages(data)
     responseData.set_index('uniqueId', inplace=True)
     responseData.loc[:, "coordinates"] = analysis.getCoordinates(responseData.index, mappings)
     responseData.reset_index(inplace=True)
