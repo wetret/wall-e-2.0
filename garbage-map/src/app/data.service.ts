@@ -4,6 +4,7 @@ import {map, tap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
 import {Event} from './event.interface';
 import {Place} from './place.interface';
+import { Average } from './average.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +14,7 @@ export class DataService {
   private places: Observable<any[]>;
   private events: Observable<any[]>;
   private placesUrl = 'http://localhost:5000/predict/';
+  private averagesUrl = 'http://localhost:5000/averages';
   private eventsUrl = 'http://localhost:5000/events/2019-09-25';
 
   constructor(private http: HttpClient) {
@@ -36,6 +38,31 @@ export class DataService {
           } as Place;
         });
       }),
+    );
+  }
+
+  getAverages(): Observable<Average[]> {
+    console.log('getaverages dataservice call');
+    return this.http.get<Average[]>(this.averagesUrl).pipe(
+      map(data => {
+        return data.map(average => {
+          return {
+            coordinates: average.coordinates,
+            cci: average.cci,
+            name: average.place_name,
+            rateCigarrettes: average.rateCigarrettes,
+            rateBottles: average.rateBottles,
+            ratePapers: average.ratePapers,
+            rateExcrements: average.rateExcrements,
+            rateSyringues: average.rateSyringues,
+            rateGums: average.rateGums,
+            rateLeaves: average.rateLeaves,
+            rateGrits: average.rateGrits,
+            rateGlassDebris: average.rateGlassDebris
+          } as Average;
+        });
+      }),
+      tap(res=>console.log(res))
     );
   }
 

@@ -295,6 +295,11 @@ export class AppComponent implements OnInit {
     return this.dataService.getPlaces(time);
   }
 
+  getAverages() {
+    console.log('getplaces call');
+    return this.dataService.getAverages();
+  }
+
   clearMap() {
     this.map.removeLayer(this.vectorLayer);
 
