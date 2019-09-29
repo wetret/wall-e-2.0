@@ -30,7 +30,8 @@ export class DataService {
             time: place.time,
             isHoliday: place.isHoliday,
             weatherCat: place.weatherCat,
-            cci: place.cci
+            cci: place.cci,
+            name: place.place_name
           } as Place;
         });
       }),

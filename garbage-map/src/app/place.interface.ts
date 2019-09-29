@@ -6,4 +6,5 @@ export interface Place {
   isHoliday: string;
   weatherCat: string;
   cci: number;
+  name: string;
 }
