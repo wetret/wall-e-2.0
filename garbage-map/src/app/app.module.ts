@@ -7,8 +7,11 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CustomMaterialModule } from './material/material.module';
 import { HeaderComponent } from './header/header.component';
 import { HttpClientModule } from '@angular/common/http';
+import {ReactiveFormsModule} from '@angular/forms';
+import {DatePipe} from '@angular/common';
 
 @NgModule({
+  providers: [DatePipe],
   declarations: [
     AppComponent,
     HeaderComponent
@@ -18,9 +21,9 @@ import { HttpClientModule } from '@angular/common/http';
     AppRoutingModule,
     BrowserAnimationsModule,
     CustomMaterialModule,
-    HttpClientModule
+    HttpClientModule,
+    ReactiveFormsModule
   ],
-  providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

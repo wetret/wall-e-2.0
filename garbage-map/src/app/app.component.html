@@ -1,8 +1,50 @@
-<app-header></app-header>
-<div id="map" class="map">
-  <mat-form-field class="date-box" id="overlay" cdkDrag>
-    <input matInput [min]="minDate" [max]="maxDate" [matDatepicker]="picker" placeholder="Choose a date">
-    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-    <mat-datepicker #picker></mat-datepicker>
-  </mat-form-field>
+<app-header [state]="internalState" (averageClick)="showAverages()" (recommendGo)="recommendGo()"></app-header>
+<div id="map" class="map tooltip">
+    <span id="tooltip-span">
+            <mat-card class="example-card">
+                    <mat-card-header>
+                      <div mat-card-avatar class="example-header-image"></div>
+                      <mat-card-title id="card-title">Leimgrubenweg</mat-card-title>
+                      <mat-card-subtitle id="card-subtitle">Bus Stop</mat-card-subtitle>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <p>
+                        <mat-list>
+                    <mat-list-item id="card-list-item-1"><strong>Cleanliness: 5 / 5</strong>
+                    </mat-list-item>
+                    <mat-divider></mat-divider>
+                    <mat-list-item id="card-list-item-2">Frequent: 🧠💉🍾📰💩🚬🗿 </mat-list-item>
+                  </mat-list>
+                      </p>
+                    </mat-card-content>
+                  </mat-card>
+    </span>
+
+  <div id="overlay" cdkDrag>
+    <form [formGroup]="dataForm">
+  <mat-grid-list cols="1" rowHeight="100px">
+    <mat-grid-tile id="upperTile">
+      <mat-form-field>
+        <input matInput [min]="minDate" [max]="maxDate" [matDatepicker]="picker" placeholder="Choose a date *" formControlName="date">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+    </mat-grid-tile>
+    <mat-grid-tile>
+      <mat-form-field>
+        <mat-label>Day Time *</mat-label>
+        <mat-select matInput width="120x" formControlName="time">
+          <mat-option value="morning">Morning 🌅</mat-option>
+          <mat-option value="afternoon">Afternoon 🌞</mat-option>
+          <mat-option value="evening">Evening 🌇</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-grid-tile>
+  </mat-grid-list>
+    <button mat-raised-button color="accent" id="updateButton" (click)="updateMap()" [disabled]="!dataForm.valid">Update Map</button>
+    </form>
+  </div>
 </div>
+<div class="mouse-position" id="mouse-position"></div>
+
+
