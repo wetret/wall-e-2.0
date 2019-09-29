@@ -20,6 +20,7 @@ import { Place } from './place.interface';
 import { PlaceInfo } from './placeinfo.interface';
 import {FormControl, FormGroup, Validators} from '@angular/forms';
 import { ThrowStmt } from '@angular/compiler';
+import { AverageInfo } from './averageinfo.interface';
 
 
 function mixColors(c1: number[], c2: number[], t: number) {
@@ -298,6 +299,33 @@ export class AppComponent implements OnInit {
   getAverages() {
     console.log('getplaces call');
     return this.dataService.getAverages();
+  }
+
+  recommendGo() {
+    // ash tray
+    rateCigarrettes: number;
+
+    // general purpose trash can
+    ratePapers: number;
+    rateGums: number;
+
+    let worstCigaretteValue = 0;
+    let worstCigaretteCandidate;
+
+    let worstPapersAndCigaretteValue = 0;
+    let worstPapersAndCigaretteCandidate;
+
+    function sortyboy(container, field) {
+      container.sort((a, b) => {
+        const x1 = (a["averageInfo"] as AverageInfo);
+        const x2 = (b["averageInfo"] as AverageInfo);
+        return (x2[field] - x1[field]);
+      });
+    }
+
+    sortyboy(this.allLines, "rateCigarettes");
+    sortyboy(this.allPolygons, "rateCigarettes");
+
   }
 
   clearMap() {
