@@ -9,6 +9,7 @@ export class HeaderComponent implements OnInit {
 
   @Input() state: string;
   @Output() averageClick = new EventEmitter();
+  @Output() recommendGo = new EventEmitter();
 
   constructor() { }
 
@@ -17,5 +18,9 @@ export class HeaderComponent implements OnInit {
 
   averageDataClick() {
     this.averageClick.emit();
+  }
+
+  recommend() {
+    this.recommendGo.emit();
   }
 }

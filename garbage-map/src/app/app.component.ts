@@ -5,7 +5,7 @@ import Map from 'ol/Map';
 import View from 'ol/View';
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import { OSM, Vector as VectorSource } from 'ol/source';
-import { Fill, Stroke, Style } from 'ol/style';
+import { Fill, Stroke, Style, Text } from 'ol/style';
 import { DataService } from './data.service';
 import MousePosition from 'ol/control/MousePosition';
 import { fromLonLat, transform } from 'ol/proj';
@@ -383,28 +383,37 @@ export class AppComponent implements OnInit {
 
   recommendGo() {
     // ash tray
-    rateCigarrettes: number;
+    //rateCigarrettes: number;
 
     // general purpose trash can
-    ratePapers: number;
-    rateGums: number;
+    //ratePapers: number;
+    //rateGums: number;
 
-    let worstCigaretteValue = 0;
-    let worstCigaretteCandidate;
+    const container = [...this.allLines, ...this.allPolygons];
+    container.sort((a, b) => {
+      const x1 = (a["averageInfo"] as AverageInfo);
+      const x2 = (b["averageInfo"] as AverageInfo);
+      return x2.rateCigarrettes - x1.rateCigarrettes ;
+    });
 
-    let worstPapersAndCigaretteValue = 0;
-    let worstPapersAndCigaretteCandidate;
-
-    function sortyboy(container, field) {
-      container.sort((a, b) => {
-        const x1 = (a["averageInfo"] as AverageInfo);
-        const x2 = (b["averageInfo"] as AverageInfo);
-        return (x2[field] - x1[field]);
-      });
-    }
-
-    sortyboy(this.allLines, "rateCigarettes");
-    sortyboy(this.allPolygons, "rateCigarettes");
+    const style = new Style({
+      stroke: new Stroke({
+        color: [0, 0, 0],
+        width: 5
+      }),
+      fill: new Fill({
+        color: [0, 0, 0, 0.2]
+      }),
+      /*text: new Text({
+        text: 'Potential',
+        font: '48px Arial Bold'
+      })*/
+    });
+    container[0].setStyle(style);
+    container[1].setStyle(style);
+    container[2].setStyle(style);
+    container[3].setStyle(style);
+    container[4].setStyle(style);
 
   }
 
