@@ -1,21 +1,11 @@
 #overlay {
   position: fixed;
-  width: 210px;
-  height: 120px;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 1rem;
+  width: 240px;
+  height: 250px;
   z-index: 4;
-  text-decoration: none;
   border: solid 1px #ccc;
   color: rgba(0, 0, 0, 0.87);
   cursor: move;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
   background: #fff;
   border-radius: 4px;
   transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1);
@@ -42,4 +32,13 @@
 .example-header-image {
   background-image: url('https://material.angular.io/assets/img/examples/shiba1.jpg');
   background-size: cover;
+}
+
+#upperTile {
+  margin-top: 1rem;
+}
+
+#updateButton {
+  margin-left: 4rem;
+  margin-bottom: 2rem;
 }
