@@ -48,6 +48,12 @@ def averages():
     return Response(responseData.to_json(orient='records'), mimetype="application/json")
 
 
+@app.route('/predict/csv', methods=['GET'])
+def predictCsv():
+    responseData = analysis.predictTheLot(cleanedData, model, transformedData)
+    return Response(responseData.to_json(orient='records'), mimetype="application/json")
+
+
 @app.route("/predict/<date>/<daySegment>", methods=['GET'])
 def predict(date, daySegment):
 
@@ -64,8 +70,9 @@ def predict(date, daySegment):
     allIds.loc[:, 'time'] = time
     allIds.loc[:, 'isHoliday'] = isHoliday
     allIds.loc[:, 'weatherCat'] = weather
+    allIds.loc[:, 'wasJustCleaned'] = 0
 
-    featureData = allIds[['place_type', 'weekday', 'time', 'isHoliday', 'weatherCat']]
+    featureData = allIds[['place_type', 'weekday', 'time', 'isHoliday', 'weatherCat', 'wasJustCleaned']]
     features = pd.get_dummies(featureData, columns=['place_type', 'weekday', 'time', 'weatherCat'])
 
     transformedColumns = transformedData['featureNames']

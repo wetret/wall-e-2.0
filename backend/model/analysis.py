@@ -127,6 +127,9 @@ def loadData():
     # add coordinates
     # rawData = addCoordinates(rawData)
 
+    # add ifWascleaned
+    rawData = addIfWasCleaned(rawData)
+
     return rawData
 
 
@@ -174,7 +177,7 @@ def cleanData(rawData):
 def transformData(data):
     # collection = 1-places
     # Xcategories = data[['place_type', 'weekday', 'time', 'isHoliday', 'weatherCat', 'long', 'lat']]
-    Xcategories = data[['place_type', 'weekday', 'time', 'isHoliday', 'weatherCat']]
+    Xcategories = data[['place_type', 'weekday', 'time', 'isHoliday', 'weatherCat', 'wasJustCleaned']]
 
     features = pd.get_dummies(Xcategories, columns=['place_type', 'weekday', 'time', 'weatherCat'])
     featureNames = list(features.columns)
@@ -182,18 +185,18 @@ def transformData(data):
     return {'features': features, 'featureNames': featureNames, 'scores': scores}
 
 
-def splitDataSet(transformedData, testSize=0.10):
+def splitDataSet(transformedData, testSize=0.1):
     # Using Skicit-learn to split data into training and testing sets
     # Split the data into training and testing sets
     train_features, test_features, train_labels, test_labels = train_test_split(np.array(transformedData['features']),
                                                                                 np.array(transformedData['scores']),
-                                                                                test_size=testSize, random_state=42)
+                                                                                test_size=testSize)
     return train_features, test_features, train_labels, test_labels
 
 
 def trainAndEvaluateModel(train_features, test_features, train_labels, test_labels):
     # Instantiate model with 1000 decision trees
-    rf = RandomForestRegressor(n_estimators=1000, random_state=42, verbose=1, n_jobs=8)
+    rf = RandomForestRegressor(n_estimators=1000, verbose=1, n_jobs=8)
     # Train the model on training data
     rf.fit(train_features, train_labels)
 
@@ -208,7 +211,7 @@ def trainAndEvaluateModel(train_features, test_features, train_labels, test_labe
 
 
 def trainAndEvaluateWithCV(X, Y):
-    model = RandomForestRegressor(n_estimators=100, verbose=1, random_state=42)
+    model = RandomForestRegressor(n_estimators=100, verbose=1)
 
     cv = skl.model_selection.KFold(n_splits=10)
 
@@ -283,8 +286,88 @@ def getMidPoint(cell):
     return np.array(polygons).astype(np.float).mean(axis=0)
 
 
+def addIfWasCleaned(cleanedData):
+    routes = pd.read_csv('../data/2019-09-28-basel-sweeper-routes.csv', ';')
+    routes.loc[:, 'uniqueId'] = routes['osm_id'].apply(lambda x: str(int(x))) + "-" + routes['cci_id'].apply(lambda x: str(x))
+    routes.loc[:, 'date'] = pd.to_datetime(routes['date'])
+    cleanedData['wasJustCleaned'] = 0
+    for uId in routes['uniqueId'].unique():
+        newFrame = cleanedData.loc[cleanedData["uniqueId"] == uId, ["timestamp"]]
+        newFrame['lastSweep'] = pd.to_datetime('2019-03-01')
+        periodSamples = cleanedData.loc[cleanedData["uniqueId"] == uId, "timestamp"].sort_values()
+        periodSweeper = routes.loc[routes["uniqueId"] == uId, "date"].sort_values()
+        # for sampleIdx, dateSample in periodSamples.iteritems():
+        sampleIdx = 0
+        for i in periodSamples.index:
+            if periodSamples.loc[i] > periodSweeper.loc[periodSweeper.index[0]]:
+                sampleIdx = i
+                break
+        gen = (idx for idx in periodSamples.index if idx >= sampleIdx)
+        for i in gen:
+            for j, idxSweep in enumerate(periodSweeper.index):
+                    if len(periodSweeper) == j + 1:
+                        newFrame.loc[newFrame['timestamp'] == periodSamples.loc[i], 'lastSweep'] = periodSweeper.loc[
+                            periodSweeper.index[j - 1]]
+                        break
+                    elif periodSweeper.loc[idxSweep] <= periodSamples.loc[i]:
+                        continue
+                    elif (idxSweep > 0) & (j > 0):
+                        newFrame.loc[newFrame['timestamp'] == periodSamples.loc[i], 'lastSweep'] = periodSweeper.loc[periodSweeper.index[j-1]]
+                        break
+        cleanedData.loc[newFrame.index, 'wasJustCleaned'] = cleanedData.loc[newFrame.index, 'timestamp'] - \
+                                                            newFrame['lastSweep'] <= pd.to_timedelta(1, 'd')
+    return cleanedData
+
+
+def predictTheLot(cleanedData, model, transformedData):
+    unknowns = pd.read_csv('../data/2019-09-27-basel-measures-prediction.csv', ';')
+    unknowns = unknowns.iloc[:, 0:3]
+    unknowns.loc[:, 'uniqueId'] = unknowns['osm_id'].apply(lambda x: str(int(x))) + "-" + unknowns['cci_id'].apply(lambda x: str(x))
+
+    # create feature for sample to predict
+    unknowns.set_index('uniqueId', inplace=True)
+    unknowns.drop(columns=['osm_id', 'cci_id'], inplace=True)
+
+    allIds = cleanedData[['uniqueId', 'place_type']].drop_duplicates(['uniqueId']).set_index('uniqueId')
+    unknowns.loc[:, 'place_type'] = allIds
+
+    unknowns.loc[:, 'timestamp'] = unknowns.loc[:, 'date'].apply(lambda x: pd.to_datetime(x))
+    unknowns.loc[:, 'date'] = unknowns.loc[:, 'timestamp'].apply(lambda x: x.date())
+    unknowns.loc[:, 'weekday'] = unknowns.loc[:, 'timestamp'].apply(lambda x: x.weekday())
+    # hour seems to be plateauish
+    # rawData.loc[:, 'hour'] = rawData.loc[:, 'timestamp'].apply(lambda x: x.hour)
+    unknowns.loc[:, 'time'] = unknowns.loc[:, 'timestamp'].apply(lambda x: getTimeCat(x))
+    unknowns.loc[:, 'isHoliday'] = unknowns.loc[:, 'date'].apply(lambda x: getHoliday(x))
+
+    # add weather
+    unknowns = addWeatherData(unknowns)
+
+    # add ifWascleaned
+    unknowns.reset_index(inplace=True)
+    unknowns = addIfWasCleaned(unknowns)
+
+    featureData = unknowns[['place_type', 'weekday', 'time', 'isHoliday', 'weatherCat', 'wasJustCleaned']]
+    features = pd.get_dummies(featureData, columns=['place_type', 'weekday', 'time', 'weatherCat'])
+
+    transformedColumns = transformedData['featureNames']
+    transData = pd.DataFrame(0, columns=transformedColumns, index=features.index)
+
+    for col in features.columns:
+        transData.loc[:, col] = features.loc[:, col]
+
+    predictions = model.predict(np.array(transData))
+    unknowns.loc[:, "cci"] = predictions
+
+    unknowns.set_index('uniqueId', inplace=True)
+
+    # add name
+    nameData = cleanedData[["uniqueId", "place_name"]].drop_duplicates(['uniqueId']).set_index('uniqueId')
+    unknowns.loc[:, "place_name"] = nameData
+
+    unknowns.reset_index(inplace=True)
+    return unknowns
+
 if __name__ == '__main__':
-    #
     rawData = loadData()
     with open('../data/raw.p', 'wb') as file:
         pickle.dump(rawData, file)
