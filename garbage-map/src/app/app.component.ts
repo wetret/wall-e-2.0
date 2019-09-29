@@ -334,7 +334,6 @@ export class AppComponent implements OnInit {
         document.getElementById("card-list-item-1").innerHTML = '<strong>Cleanliness: ' + (Math.round(info.cci * 100) / 100) + ' / 5</strong>';
         if ("averageInfo" in highestAnimationElement) {
           let s = ""
-          console.log((highestAnimationElement["averageInfo"] as AverageInfo))
           s += ((highestAnimationElement["averageInfo"] as AverageInfo).rateCigarrettes > 0.41) ? '🚬' : '';
           s += ((highestAnimationElement["averageInfo"] as AverageInfo).rateBottles > 0.15) ? '🍾' : '';
           s += ((highestAnimationElement["averageInfo"] as AverageInfo).rateGums > 0) ? '🧠' : '';
@@ -372,12 +371,10 @@ export class AppComponent implements OnInit {
   }
 
   getPlaces(time: string) {
-    console.log('getplaces call', time);
     return this.dataService.getPlaces(time);
   }
 
   getAverages() {
-    console.log('getplaces call');
     return this.dataService.getAverages();
   }
 
@@ -411,9 +408,6 @@ export class AppComponent implements OnInit {
     container[3].setStyle(style);
     container[4].setStyle(style);
 
-    for (let i = 5; i < container.length();i++) {
-      container[i].setStyle(new Style());
-    }
   }
 
   clearMap() {

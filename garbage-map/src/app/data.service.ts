@@ -22,7 +22,6 @@ export class DataService {
   }
 
   getPlaces(time: string): Observable<Place[]> {
-    console.log('getplaces dataservice call', this.placesUrl + time);
     return this.http.get<Place[]>(this.placesUrl + time).pipe(
       map(data => {
         return data.map(place => {
@@ -42,7 +41,6 @@ export class DataService {
   }
 
   getAverages(): Observable<Average[]> {
-    console.log('getaverages dataservice call');
     return this.http.get<Average[]>(this.averagesUrl).pipe(
       map(data => {
         return data.map(average => {
@@ -63,7 +61,6 @@ export class DataService {
           } as Average;
         });
       }),
-      tap(res=>console.log(res))
     );
   }
 
@@ -83,7 +80,6 @@ export class DataService {
           } as Event;
         });
       }),
-      tap(res => console.log(res))
     );
   }
 }
