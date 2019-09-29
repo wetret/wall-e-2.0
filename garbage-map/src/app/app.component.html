@@ -1,4 +1,4 @@
-<app-header></app-header>
+<app-header [state]="internalState" (averageClick)="showAverages()"></app-header>
 <div id="map" class="map tooltip">
     <span id="tooltip-span">
             <mat-card class="example-card">
@@ -43,7 +43,7 @@
   </mat-grid-list>
     <button mat-raised-button color="accent" id="updateButton" (click)="updateMap()" [disabled]="!dataForm.valid">Update Map</button>
     </form>
-    </div>
+  </div>
 </div>
 <div class="mouse-position" id="mouse-position"></div>
 

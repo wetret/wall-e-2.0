@@ -85,11 +85,4 @@ export class DataService {
       tap(res => console.log(res))
     );
   }
-
-  getDataByDay($eventElement: string): Observable<Place[]> {
-    const url = `${this.placesUrl}`;
-    return this.http.get<Place[]>(url).pipe(
-      tap(_ => console.log(`fetched data with date ${$eventElement}`))
-    );
-  }
 }

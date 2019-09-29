@@ -1,26 +1,27 @@
-import {Component, OnInit} from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
 import 'ol/ol.css';
 import Map from 'ol/Map';
 import View from 'ol/View';
-import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer';
-import {OSM, Vector as VectorSource} from 'ol/source';
-import {Fill, Stroke, Style} from 'ol/style';
-import {DataService} from './data.service';
+import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
+import { OSM, Vector as VectorSource } from 'ol/source';
+import { Fill, Stroke, Style } from 'ol/style';
+import { DataService } from './data.service';
 import MousePosition from 'ol/control/MousePosition';
-import {fromLonLat, transform} from 'ol/proj';
-import {Feature} from 'ol';
-import {defaults as defaultControls} from 'ol/control';
-import {DatePipe} from '@angular/common';
+import { fromLonLat, transform } from 'ol/proj';
+import { Feature } from 'ol';
+import { defaults as defaultControls } from 'ol/control';
+import { DatePipe } from '@angular/common';
 import Polygon from 'ol/geom/Polygon';
 import LineString from 'ol/geom/LineString';
 import Point from 'ol/geom/Point';
 import { createStringXY } from 'ol/coordinate';
 import { Place } from './place.interface';
 import { PlaceInfo } from './placeinfo.interface';
-import {FormControl, FormGroup, Validators} from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ThrowStmt } from '@angular/compiler';
 import { AverageInfo } from './averageinfo.interface';
+import { Average } from './average.interface';
 
 
 function mixColors(c1: number[], c2: number[], t: number) {
@@ -61,6 +62,7 @@ export class AppComponent implements OnInit {
 
   private allPolygons: Feature[] = [];
   private allLines: Feature[] = [];
+  private internalState = '2019-08-30 evening';
 
   constructor(private dataService: DataService, private datePipe: DatePipe) {
     this.dataForm.addControl('date', new FormControl("2019-08-25", [
@@ -80,7 +82,7 @@ export class AppComponent implements OnInit {
       controls: defaultControls().extend([this.setupMouse()]),
       layers: [
         new TileLayer({
-          source: new OSM({url: 'https://{a-c}.tile.openstreetmap.de/{z}/{x}/{y}.png'})
+          source: new OSM({ url: 'https://{a-c}.tile.openstreetmap.de/{z}/{x}/{y}.png' })
         }),
         this.vectorLayer
       ],
@@ -120,7 +122,7 @@ export class AppComponent implements OnInit {
   addLinePlacesToVectorLayer(places: Place[]) {
     for (const p of places) {
       const feature = new Feature(this.lineFromString(p.coordinates));
-      feature["placeInfo"] = {cci: p.cci, name: p.name, type: p.type } as PlaceInfo;
+      feature["placeInfo"] = { cci: p.cci, name: p.name, type: p.type } as PlaceInfo;
       const cci = p.cci;
       const color = getColorFromCCI(cci);
       const style = new Style({
@@ -142,7 +144,51 @@ export class AppComponent implements OnInit {
   addPolygonPlacesToVectorLayer(places: Place[]) {
     for (const p of places) {
       const feature = new Feature(this.polygonFromString(p.coordinates));
-      feature["placeInfo"] = {cci: p.cci, name: p.name, type: p.type } as PlaceInfo;
+      feature["placeInfo"] = { cci: p.cci, name: p.name, type: p.type } as PlaceInfo;
+      const cci = p.cci;
+      const color = getColorFromCCI(cci);
+      const style = new Style({
+        stroke: new Stroke({
+          color: [color[0], color[1], color[2]],
+          width: 5
+        }),
+        fill: new Fill({
+          color: [color[0], color[1], color[2], 0.2]
+        })
+      });
+
+      feature.setStyle(style);
+      this.allPolygons.push(feature);
+      this.vectorSource.addFeature(feature);
+    }
+  }
+
+  addLineAveragesToVectorLayer(averages: Average[]) {
+    for (const p of averages) {
+      const feature = new Feature(this.lineFromString(p.coordinates));
+      feature["averageInfo"] = { cci: p.cci, name: p.name, type: p.type } as AverageInfo;
+      const cci = p.cci;
+      const color = getColorFromCCI(cci);
+      const style = new Style({
+        stroke: new Stroke({
+          color: [color[0], color[1], color[2]],
+          width: 5
+        }),
+        fill: new Fill({
+          color: [color[0], color[1], color[2], 0.2]
+        })
+      });
+
+      feature.setStyle(style);
+      this.allLines.push(feature);
+      this.vectorSource.addFeature(feature);
+    }
+  }
+
+  addPolygonAveragesToVectorLayer(averages: Average[]) {
+    for (const p of averages) {
+      const feature = new Feature(this.polygonFromString(p.coordinates));
+      feature["averageInfo"] = { cci: p.cci, name: p.name, type: p.type } as AverageInfo;
       const cci = p.cci;
       const color = getColorFromCCI(cci);
       const style = new Style({
@@ -192,7 +238,7 @@ export class AppComponent implements OnInit {
     const ANIMATION_MAX = 3000;
     const ANIMATION_STEP = 350;
     const HIGHLIGHT_COLOR = [0, 0, 255];
-    setInterval(function(_this) {
+    setInterval(function (_this) {
       const domElement = document.getElementById('mouse-position');
       const coords = domElement.firstElementChild.innerHTML.split(', ').map(s => parseFloat(s));
       if (isNaN(coords[0])) {
@@ -349,11 +395,9 @@ export class AppComponent implements OnInit {
     const form = this.dataForm.value;
     const momentDate = new Date(form.date); // Replace event.value with your date value
     const dateString = this.datePipe.transform(momentDate, 'yyyy-MM-dd');
-    console.log('update map', form.time, dateString)
+    this.internalState = dateString + ' ' + form.time;
 
     this.getPlaces(dateString + '/' + form.time).subscribe(places => {
-      console.log('getplaces return');
-
       this.places = places;
       places.forEach(place => {
         if (place.coordinates.substr(0, 4) === 'LINE') {
@@ -364,5 +408,20 @@ export class AppComponent implements OnInit {
       });
     });
 
+  }
+
+  showAverages() {
+    this.clearMap();
+
+    this.getAverages().subscribe(places => {
+      this.places = places;
+      places.forEach(place => {
+        if (place.coordinates.substr(0, 4) === 'LINE') {
+          this.addLineAveragesToVectorLayer([place]);
+        } else {
+          this.addPolygonAveragesToVectorLayer([place]);
+        }
+      });
+    });
   }
 }
