@@ -8,4 +8,5 @@ export interface Average {
   rateExcrements: number;
   rateCigarrettes: number;
   rateGrits: number;
+  name: string;
 }

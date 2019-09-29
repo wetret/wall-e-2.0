@@ -19,8 +19,8 @@ export class DataService {
     this.http = http;
   }
 
-  getPlaces(time: string) {
-    const places = this.http.get<Place[]>(this.placesUrl + 'evening').pipe(
+  getPlaces(time: string): Observable<Place[]> {
+    return this.http.get<Place[]>(this.placesUrl + time).pipe(
       map(data => {
         return data.map(place => {
           return {
@@ -30,13 +30,12 @@ export class DataService {
             time: place.time,
             isHoliday: place.isHoliday,
             weatherCat: place.weatherCat,
-            cci: place.cci
+            cci: place.cci,
+            name: place.place_name
           } as Place;
         });
       }),
-      tap(res => console.log(res))
-    ).subscribe();
-    console.log(places);
+    );
   }
 
   getEvents(): Observable<Event[]> {

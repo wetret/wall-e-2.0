@@ -4,27 +4,41 @@
             <mat-card class="example-card">
                     <mat-card-header>
                       <div mat-card-avatar class="example-header-image"></div>
-                      <mat-card-title>Leimgrubenweg</mat-card-title>
-                      <mat-card-subtitle>Bus Stop</mat-card-subtitle>
+                      <mat-card-title id="card-title">Leimgrubenweg</mat-card-title>
+                      <mat-card-subtitle id="card-subtitle">Bus Stop</mat-card-subtitle>
                     </mat-card-header>
                     <mat-card-content>
                       <p>
                         <mat-list>
-                    <mat-list-item><strong>Cleanliness: 5 / 5</strong>
+                    <mat-list-item id="card-list-item-1"><strong>Cleanliness: 5 / 5</strong>
                     </mat-list-item>
                     <mat-divider></mat-divider>
-                    <mat-list-item>Frequent: 🧠💉🍾📰💩🚬🗿 </mat-list-item>
+                    <mat-list-item id="card-list-item-2">Frequent: 🧠💉🍾📰💩🚬🗿 </mat-list-item>
                   </mat-list>
                       </p>
                     </mat-card-content>
                   </mat-card>
     </span>
-    
-    <mat-form-field class="date-box" id="overlay" cdkDrag>
+
+  <mat-grid-list cols="1" rowHeight="100px" id="overlay" cdkDrag>
+    <mat-grid-tile style.background='lightgreen' >
+      <mat-form-field>
         <input matInput [min]="minDate" [max]="maxDate" [matDatepicker]="picker" placeholder="Choose a date">
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
-    </mat-form-field>
+      </mat-form-field>
+    </mat-grid-tile>
+    <mat-grid-tile style.background='lightpurple'>
+      <mat-form-field>
+        <mat-label>Day Time</mat-label>
+        <mat-select>
+          <option value="morning">Morning 🌅</option>
+          <option value="afternoon">Afternoon</option>
+          <option value="evening">Evening</option>
+        </mat-select>
+      </mat-form-field>
+    </mat-grid-tile>
+  </mat-grid-list>
 </div>
 <div class="mouse-position" id="mouse-position"></div>
 
