@@ -20,7 +20,7 @@ export class DataService {
   }
 
   getPlaces(time: string): Observable<Place[]> {
-    console.log(this.placesUrl + time);
+    console.log('getplaces dataservice call', this.placesUrl + time);
     return this.http.get<Place[]>(this.placesUrl + time).pipe(
       map(data => {
         return data.map(place => {

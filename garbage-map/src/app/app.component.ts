@@ -61,9 +61,9 @@ export class AppComponent implements OnInit {
   private allLines: Feature[] = [];
 
   constructor(private dataService: DataService, private datePipe: DatePipe) {
-    this.dataForm.addControl('date', new FormControl([
+    this.dataForm.addControl('date', new FormControl("2019-08-25", [
       Validators.required]));
-    this.dataForm.addControl('time', new FormControl([
+    this.dataForm.addControl('time', new FormControl("afternoon", [
       Validators.required]));
   }
 
@@ -88,16 +88,7 @@ export class AppComponent implements OnInit {
       })
     });
 
-    this.getPlaces('2019-08-30/evening').subscribe(places => {
-      this.places = places;
-      places.forEach(place => {
-        if (place.coordinates.substr(0, 4) === 'LINE') {
-          this.addLinePlacesToVectorLayer([place]);
-        } else {
-          this.addPolygonPlacesToVectorLayer([place]);
-        }
-      });
-    });
+    this.updateMap();
   }
 
   polygonFromString(input: string): Polygon {
@@ -299,6 +290,7 @@ export class AppComponent implements OnInit {
   }
 
   getPlaces(time: string) {
+    console.log('getplaces call', time);
     return this.dataService.getPlaces(time);
   }
 
@@ -306,8 +298,11 @@ export class AppComponent implements OnInit {
     const form = this.dataForm.value;
     const momentDate = new Date(form.date); // Replace event.value with your date value
     const dateString = this.datePipe.transform(momentDate, 'yyyy-MM-dd');
+    console.log('update map', form.time, dateString)
 
     this.getPlaces(dateString + '/' + form.time).subscribe(places => {
+      console.log('getplaces return');
+
       this.places = places;
       places.forEach(place => {
         if (place.coordinates.substr(0, 4) === 'LINE') {
