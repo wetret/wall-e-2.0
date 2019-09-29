@@ -2,6 +2,10 @@
 
 `cd backend`
 
+**Load Dependancies:**
+
+`pip install -r requirements.txt`
+
 **Train Model:**
 
 `python3 model/analysis.py`
@@ -14,10 +18,10 @@
 
 `cd garbage-map`
 
-**Build Frontend:**
+**Load Dependancies:**
 
 `npm install`
 
-**Server Angular:**
+**Start Frontend:**
 
 `ng s -o`
