@@ -1,23 +1,24 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 
 import 'ol/ol.css';
 import Map from 'ol/Map';
 import View from 'ol/View';
-import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
-import { OSM, Vector as VectorSource } from 'ol/source';
-import { Fill, Stroke, Style, Text } from 'ol/style';
-import { DataService} from './data.service';
+import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer';
+import {OSM, Vector as VectorSource} from 'ol/source';
+import {Fill, Stroke, Style} from 'ol/style';
+import {DataService} from './data.service';
 import MousePosition from 'ol/control/MousePosition';
-import { fromLonLat, transform } from 'ol/proj';
-import { Feature } from 'ol';
+import {fromLonLat, transform} from 'ol/proj';
+import {Feature} from 'ol';
 import {defaults as defaultControls} from 'ol/control';
-
+import {DatePipe} from '@angular/common';
 import Polygon from 'ol/geom/Polygon';
 import LineString from 'ol/geom/LineString';
 import Point from 'ol/geom/Point';
 import { createStringXY } from 'ol/coordinate';
 import { Place } from './place.interface';
 import { PlaceInfo } from './placeinfo.interface';
+import {FormControl, FormGroup, Validators} from '@angular/forms';
 
 
 function mixColors(c1: number[], c2: number[], t: number) {
@@ -47,6 +48,7 @@ export class AppComponent implements OnInit {
   private initialLatitude = 7.5715701;
   private initialLongitude = 47.5661319;
   private places;
+  private dataForm = new FormGroup({});
 
   minDate = new Date(2019, 3, 1);
   maxDate = new Date(2019, 8, 28);
@@ -58,8 +60,12 @@ export class AppComponent implements OnInit {
   private allPolygons: Feature[] = [];
   private allLines: Feature[] = [];
 
-  // TODO subscribe to Observables
-  constructor(private dataService: DataService) {}
+  constructor(private dataService: DataService, private datePipe: DatePipe) {
+    this.dataForm.addControl('date', new FormControl([
+      Validators.required]));
+    this.dataForm.addControl('time', new FormControl([
+      Validators.required]));
+  }
 
   ngOnInit() {
     this.vectorSource = new VectorSource();
@@ -82,7 +88,7 @@ export class AppComponent implements OnInit {
       })
     });
 
-    this.getPlaces().subscribe(places => {
+    this.getPlaces('2019-08-30/evening').subscribe(places => {
       this.places = places;
       places.forEach(place => {
         if (place.coordinates.substr(0, 4) === 'LINE') {
@@ -170,13 +176,14 @@ export class AppComponent implements OnInit {
   getEvents() {
     return this.dataService.getEvents();
   }
+
   setupMouse() {
     const tooltipSpan = document.getElementById('tooltip-span');
     window.onmousemove = (e) => {
-        const x = e.clientX;
-        const y = e.clientY;
-        tooltipSpan.style.top = (y + 20) + 'px';
-        tooltipSpan.style.left = (x + 20) + 'px';
+      const x = e.clientX;
+      const y = e.clientY;
+      tooltipSpan.style.top = (y + 20) + 'px';
+      tooltipSpan.style.left = (x + 20) + 'px';
     };
 
     const domElement = document.getElementById('mouse-position');
@@ -270,7 +277,7 @@ export class AppComponent implements OnInit {
         document.getElementById("card-list-item-1").innerHTML = '<strong>Cleanliness: ' + (Math.round(placeInfo.cci * 100) / 100) + ' / 5</strong>';
         document.getElementById("card-list-item-2").innerHTML = ''; // 'Frequent: 🧠💉🍾📰💩🚬🗿 ';
       } else {
-        document.getElementById("tooltip-span").style.display = 'none';
+        document.getElementById('tooltip-span').style.display = 'none';
       }
       if (!shortestElement) {
         return;
@@ -286,12 +293,30 @@ export class AppComponent implements OnInit {
         })
       });
       shortestElement.setStyle(style);
-      shortestElement["active"] = ANIMATION_MAX;
+      shortestElement['active'] = ANIMATION_MAX;
     }.bind(undefined, this.allLines, this.allPolygons), 50);
     return mousePositionControl;
   }
 
-  getPlaces() {
-    return this.dataService.getPlaces('evening');
+  getPlaces(time: string) {
+    return this.dataService.getPlaces(time);
+  }
+
+  updateMap() {
+    const form = this.dataForm.value;
+    const momentDate = new Date(form.date); // Replace event.value with your date value
+    const dateString = this.datePipe.transform(momentDate, 'yyyy-MM-dd');
+
+    this.getPlaces(dateString + '/' + form.time).subscribe(places => {
+      this.places = places;
+      places.forEach(place => {
+        if (place.coordinates.substr(0, 4) === 'LINE') {
+          this.addLinePlacesToVectorLayer([place]);
+        } else {
+          this.addPolygonPlacesToVectorLayer([place]);
+        }
+      });
+    });
+
   }
 }

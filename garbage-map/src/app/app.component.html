@@ -20,25 +20,30 @@
                   </mat-card>
     </span>
 
-  <mat-grid-list cols="1" rowHeight="100px" id="overlay" cdkDrag>
-    <mat-grid-tile style.background='lightgreen' >
+  <div id="overlay" cdkDrag>
+    <form [formGroup]="dataForm">
+  <mat-grid-list cols="1" rowHeight="100px">
+    <mat-grid-tile id="upperTile">
       <mat-form-field>
-        <input matInput [min]="minDate" [max]="maxDate" [matDatepicker]="picker" placeholder="Choose a date">
+        <input matInput [min]="minDate" [max]="maxDate" [matDatepicker]="picker" placeholder="Choose a date *" formControlName="date">
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
       </mat-form-field>
     </mat-grid-tile>
-    <mat-grid-tile style.background='lightpurple'>
+    <mat-grid-tile>
       <mat-form-field>
-        <mat-label>Day Time</mat-label>
-        <mat-select>
-          <option value="morning">Morning 🌅</option>
-          <option value="afternoon">Afternoon</option>
-          <option value="evening">Evening</option>
+        <mat-label>Day Time *</mat-label>
+        <mat-select matInput width="120x" formControlName="time">
+          <mat-option value="morning">Morning 🌅</mat-option>
+          <mat-option value="afternoon">Afternoon</mat-option>
+          <mat-option value="evening">Evening</mat-option>
         </mat-select>
       </mat-form-field>
     </mat-grid-tile>
   </mat-grid-list>
+    <button mat-raised-button color="accent" id="updateButton" (click)="updateMap()" [disabled]="!dataForm.valid">Update Map</button>
+    </form>
+    </div>
 </div>
 <div class="mouse-position" id="mouse-position"></div>
 

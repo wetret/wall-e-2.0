@@ -12,7 +12,7 @@ export class DataService {
 
   private places: Observable<any[]>;
   private events: Observable<any[]>;
-  private placesUrl = 'http://localhost:5000/predict/2019-08-30/';
+  private placesUrl = 'http://localhost:5000/predict/';
   private eventsUrl = 'http://localhost:5000/events/2019-09-25';
 
   constructor(private http: HttpClient) {
@@ -20,6 +20,7 @@ export class DataService {
   }
 
   getPlaces(time: string): Observable<Place[]> {
+    console.log(this.placesUrl + time);
     return this.http.get<Place[]>(this.placesUrl + time).pipe(
       map(data => {
         return data.map(place => {
