@@ -27,11 +27,11 @@ function mixColors(c1: number[], c2: number[], t: number) {
 function getColorFromCCI(cci: number) {
   let r;
   let g;
-  if (cci < 2.5) {
+  if (cci < 4) {
     r = 255;
-    g = cci * 102;
+    g = cci * 64;
   } else {
-    r = 2.5 * (cci - 2.5) * 102;
+    r = (cci - 4) * 255;
     g = 255;
   }
   return [r, g, 0];
@@ -265,7 +265,7 @@ export class AppComponent implements OnInit {
       if (highestAnimationValue > (ANIMATION_MAX * 0.85)) {
         const placeInfo = (highestAnimationElement["placeInfo"] as PlaceInfo);
         document.getElementById("tooltip-span").style.display = 'block';
-        document.getElementById("card-title").innerHTML = placeInfo.name;
+        document.getElementById("card-title").innerHTML = placeInfo.name === 'no name found' ? '' : placeInfo.name;
         document.getElementById("card-subtitle").innerHTML = placeInfo.type === 'no type found' ? '' : placeInfo.type;
         document.getElementById("card-list-item-1").innerHTML = '<strong>Cleanliness: ' + (Math.round(placeInfo.cci * 100) / 100) + ' / 5</strong>';
         document.getElementById("card-list-item-2").innerHTML = ''; // 'Frequent: 🧠💉🍾📰💩🚬🗿 ';
