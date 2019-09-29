@@ -166,7 +166,16 @@ export class AppComponent implements OnInit {
   addLineAveragesToVectorLayer(averages: Average[]) {
     for (const p of averages) {
       const feature = new Feature(this.lineFromString(p.coordinates));
-      feature["averageInfo"] = { cci: p.cci, name: p.name, type: p.type } as AverageInfo;
+      feature["averageInfo"] = { cci: p.cci, name: p.name, type: p.type, 
+  rateGums: p.rateGums,
+  rateSyringues: p.rateSyringues,
+  rateLeaves: p.rateLeaves,
+  rateGlassDebris: p.rateGlassDebris,
+  rateBottles: p.rateBottles,
+  ratePapers: p.ratePapers,
+  rateExcrements: p.rateExcrements,
+  rateCigarrettes: p.rateCigarrettes,
+  rateGrits: p.rateGrits, } as AverageInfo;
       const cci = p.cci;
       const color = getColorFromCCI(cci);
       const style = new Style({
@@ -188,8 +197,17 @@ export class AppComponent implements OnInit {
   addPolygonAveragesToVectorLayer(averages: Average[]) {
     for (const p of averages) {
       const feature = new Feature(this.polygonFromString(p.coordinates));
-      feature["averageInfo"] = { cci: p.cci, name: p.name, type: p.type } as AverageInfo;
-      const cci = p.cci;
+      feature["averageInfo"] = { cci: p.cci, name: p.name, type: p.type, 
+        rateGums: p.rateGums,
+        rateSyringues: p.rateSyringues,
+        rateLeaves: p.rateLeaves,
+        rateGlassDebris: p.rateGlassDebris,
+        rateBottles: p.rateBottles,
+        ratePapers: p.ratePapers,
+        rateExcrements: p.rateExcrements,
+        rateCigarrettes: p.rateCigarrettes,
+        rateGrits: p.rateGrits, } as AverageInfo;
+              const cci = p.cci;
       const color = getColorFromCCI(cci);
       const style = new Style({
         stroke: new Stroke({
@@ -263,7 +281,7 @@ export class AppComponent implements OnInit {
             highestAnimationElement = l;
           }
           const T = l["active"] / ANIMATION_MAX;
-          const cciColor = getColorFromCCI(l["placeInfo"].cci);
+          const cciColor = getColorFromCCI("placeInfo" in l ? l["placeInfo"].cci : l["averageInfo"].cci);
           const mixColor = mixColors(HIGHLIGHT_COLOR, cciColor, 1 - T);
           const style = new Style({
             stroke: new Stroke({
@@ -292,7 +310,7 @@ export class AppComponent implements OnInit {
             highestAnimationElement = l;
           }
           const T = l["active"] / ANIMATION_MAX;
-          const cciColor = getColorFromCCI(l["placeInfo"].cci);
+          const cciColor = getColorFromCCI("placeInfo" in l ? l["placeInfo"].cci : l["averageInfo"].cci);
           const mixColor = mixColors(HIGHLIGHT_COLOR, cciColor, 1 - T);
           const style = new Style({
             stroke: new Stroke({
@@ -309,12 +327,28 @@ export class AppComponent implements OnInit {
 
       // disable or enable mouseover
       if (highestAnimationValue > (ANIMATION_MAX * 0.85)) {
-        const placeInfo = (highestAnimationElement["placeInfo"] as PlaceInfo);
+        const info = "placeInfo" in highestAnimationElement ? (highestAnimationElement["placeInfo"] as PlaceInfo) : (highestAnimationElement["averageInfo"] as AverageInfo);
         document.getElementById("tooltip-span").style.display = 'block';
-        document.getElementById("card-title").innerHTML = placeInfo.name === 'no name found' ? '' : placeInfo.name;
-        document.getElementById("card-subtitle").innerHTML = placeInfo.type === 'no type found' ? '' : placeInfo.type;
-        document.getElementById("card-list-item-1").innerHTML = '<strong>Cleanliness: ' + (Math.round(placeInfo.cci * 100) / 100) + ' / 5</strong>';
-        document.getElementById("card-list-item-2").innerHTML = ''; // 'Frequent: 🧠💉🍾📰💩🚬🗿 ';
+        document.getElementById("card-title").innerHTML = info.name === 'no name found' ? '' : info.name;
+        document.getElementById("card-subtitle").innerHTML = (info.type === 'no type found' || !(info.type)) ? '' : info.type;
+        document.getElementById("card-list-item-1").innerHTML = '<strong>Cleanliness: ' + (Math.round(info.cci * 100) / 100) + ' / 5</strong>';
+        if ("averageInfo" in highestAnimationElement) {
+          let s = ""
+          console.log((highestAnimationElement["averageInfo"] as AverageInfo))
+          s += ((highestAnimationElement["averageInfo"] as AverageInfo).rateCigarrettes > 0.41) ? '🚬' : '';
+          s += ((highestAnimationElement["averageInfo"] as AverageInfo).rateBottles > 0.15) ? '🍾' : '';
+          s += ((highestAnimationElement["averageInfo"] as AverageInfo).rateGums > 0) ? '🧠' : '';
+          s += ((highestAnimationElement["averageInfo"] as AverageInfo).rateSyringues > 0) ? '💉' : '';
+          s += ((highestAnimationElement["averageInfo"] as AverageInfo).ratePapers > 0.56) ? '📰' : '';
+          s += ((highestAnimationElement["averageInfo"] as AverageInfo).rateExcrements > 0) ? '💩' : '';
+          s += ((highestAnimationElement["averageInfo"] as AverageInfo).rateLeaves > 0.007) ? '🍂' : '';
+          s += ((highestAnimationElement["averageInfo"] as AverageInfo).rateGlassDebris > 0.0009) ? '✨' : '';
+          if (!(s === '')) {
+            document.getElementById("card-list-item-2").innerHTML = 'Frequent: ' + s; 
+          }
+        } else {
+          document.getElementById("card-list-item-2").innerHTML = ''; 
+        }
       } else {
         document.getElementById('tooltip-span').style.display = 'none';
       }

@@ -50,6 +50,7 @@ export class DataService {
             coordinates: average.coordinates,
             cci: average.cci,
             name: average.place_name,
+            type: average.place_type,
             rateCigarrettes: average.rateCigarrettes,
             rateBottles: average.rateBottles,
             ratePapers: average.ratePapers,
