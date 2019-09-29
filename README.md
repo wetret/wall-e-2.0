@@ -4,7 +4,7 @@
 
 **Train Model:**
 
-`python3 analysis.py`
+`python3 model/analysis.py`
 
 **Start Backend:**
 
