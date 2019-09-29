@@ -19,6 +19,7 @@ import { createStringXY } from 'ol/coordinate';
 import { Place } from './place.interface';
 import { PlaceInfo } from './placeinfo.interface';
 import {FormControl, FormGroup, Validators} from '@angular/forms';
+import { ThrowStmt } from '@angular/compiler';
 
 
 function mixColors(c1: number[], c2: number[], t: number) {
@@ -63,7 +64,7 @@ export class AppComponent implements OnInit {
   constructor(private dataService: DataService, private datePipe: DatePipe) {
     this.dataForm.addControl('date', new FormControl("2019-08-25", [
       Validators.required]));
-    this.dataForm.addControl('time', new FormControl("afternoon", [
+    this.dataForm.addControl('time', new FormControl("evening", [
       Validators.required]));
   }
 
@@ -190,7 +191,7 @@ export class AppComponent implements OnInit {
     const ANIMATION_MAX = 3000;
     const ANIMATION_STEP = 350;
     const HIGHLIGHT_COLOR = [0, 0, 255];
-    setInterval(function(allLines, allPolygons) {
+    setInterval(function(_this) {
       const domElement = document.getElementById('mouse-position');
       const coords = domElement.firstElementChild.innerHTML.split(', ').map(s => parseFloat(s));
       if (isNaN(coords[0])) {
@@ -200,7 +201,7 @@ export class AppComponent implements OnInit {
       let highestAnimationElement;
       let shortestValue = 2000;
       let shortestElement: Feature;
-      for (const l of allLines) {
+      for (const l of _this.allLines) {
         const c = (l.getGeometry() as LineString).getClosestPoint(coords);
         const d = (c[0] - coords[0]) * (c[0] - coords[0]) + (c[1] - coords[1]) * (c[1] - coords[1]);
         if (d < shortestValue) {
@@ -229,7 +230,7 @@ export class AppComponent implements OnInit {
           l.setStyle(style);
         }
       }
-      for (const l of allPolygons) {
+      for (const l of _this.allPolygons) {
         const c = (l.getGeometry() as Polygon).getClosestPoint(coords);
         const d = (c[0] - coords[0]) * (c[0] - coords[0]) + (c[1] - coords[1]) * (c[1] - coords[1]);
         if (d < shortestValue + 1000) {
@@ -285,7 +286,7 @@ export class AppComponent implements OnInit {
       });
       shortestElement.setStyle(style);
       shortestElement['active'] = ANIMATION_MAX;
-    }.bind(undefined, this.allLines, this.allPolygons), 50);
+    }.bind(undefined, this), 50);
     return mousePositionControl;
   }
 
@@ -294,7 +295,24 @@ export class AppComponent implements OnInit {
     return this.dataService.getPlaces(time);
   }
 
+  clearMap() {
+    this.map.removeLayer(this.vectorLayer);
+
+    this.vectorSource = new VectorSource();
+    this.vectorLayer = new VectorLayer({
+      source: this.vectorSource
+    });
+
+    this.map.addLayer(this.vectorLayer);
+
+    this.allPolygons = [];
+    this.allLines = [];
+  }
+
   updateMap() {
+
+    this.clearMap();
+
     const form = this.dataForm.value;
     const momentDate = new Date(form.date); // Replace event.value with your date value
     const dateString = this.datePipe.transform(momentDate, 'yyyy-MM-dd');
