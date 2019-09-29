@@ -7,4 +7,6 @@ export interface Place {
   weatherCat: string;
   cci: number;
   name: string;
+  place_type: string;
+  place_name: string;
 }
