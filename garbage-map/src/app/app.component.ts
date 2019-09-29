@@ -399,15 +399,11 @@ export class AppComponent implements OnInit {
     const style = new Style({
       stroke: new Stroke({
         color: [0, 0, 0],
-        width: 5
+        width: 50
       }),
       fill: new Fill({
         color: [0, 0, 0, 0.2]
-      }),
-      /*text: new Text({
-        text: 'Potential',
-        font: '48px Arial Bold'
-      })*/
+      })
     });
     container[0].setStyle(style);
     container[1].setStyle(style);
@@ -415,6 +411,9 @@ export class AppComponent implements OnInit {
     container[3].setStyle(style);
     container[4].setStyle(style);
 
+    for (let i = 5; i < container.length();i++) {
+      container[i].setStyle(new Style());
+    }
   }
 
   clearMap() {
@@ -455,6 +454,7 @@ export class AppComponent implements OnInit {
 
   showAverages() {
     this.clearMap();
+    this.internalState = 'Average Data'
 
     this.getAverages().subscribe(places => {
       this.places = places;
