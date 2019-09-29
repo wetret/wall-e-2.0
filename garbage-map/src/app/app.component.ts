@@ -398,11 +398,11 @@ export class AppComponent implements OnInit {
 
     const style = new Style({
       stroke: new Stroke({
-        color: [0, 0, 0],
-        width: 50
+        color: [70, 130, 180],
+        width: 30
       }),
       fill: new Fill({
-        color: [0, 0, 0, 0.2]
+        color: [70, 130, 180, 0.2]
       })
     });
     container[0].setStyle(style);
