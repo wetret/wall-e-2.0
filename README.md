@@ -16,7 +16,7 @@
 
 ## Frontend
 
-`cd garbage-map`
+`cd frontend`
 
 **Load Dependancies:**
 
